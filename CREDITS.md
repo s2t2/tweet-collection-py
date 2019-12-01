@@ -12,3 +12,4 @@
   + [Tweepy](http://www.tweepy.org/)
   + [Tweepy Source](https://github.com/tweepy/tweepy)
   + [Tweepy Streaming Guide](http://docs.tweepy.org/en/v3.8.0/streaming_how_to.html)
+  + [Tweepy Streaming Source](https://github.com/tweepy/tweepy/blob/b3bc1f4236027fbb4ded83dc32fd8065612e2226/tweepy/streaming.py)
