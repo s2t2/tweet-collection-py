@@ -28,3 +28,11 @@ Download your Google Cloud API service account credentials and set the `GOOGLE_A
 ### Twitter API Credentials
 
 Obtain credentials which provide access to the Twitter API. Set the environment variables `TWITTER_CONSUMER_KEY`, `TWITTER_CONSUMER_SECRET`, `TWITTER_ACCESS_TOKEN`, and `TWITTER_ACCESS_TOKEN_SECRET` accordingly.
+
+## Usage
+
+Run the tweet collector:
+
+```sh
+python -m app.tweet_collector
+```
