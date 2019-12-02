@@ -8,7 +8,7 @@ from tweepy import OAuthHandler
 from tweepy import Stream
 
 from app import APP_ENV
-from app.storage_service import collect
+from app.storage_service import append_to_csv, append_to_bq #, TWEET_COLUMNS, USER_COLUMNS
 
 load_dotenv()
 
@@ -71,21 +71,19 @@ def parse_status(status):
 
     tweet = {
         "id_str": twt["id_str"],
-        #"in_reply_to_status_id_str": twt["in_reply_to_status_id_str"],
+        "user_id_str": usr["id_str"], # FOREIGN KEY!
+        "full_text": full_text, #> 'Refuse censure! Make them try to impeach and beat it. Mr President you are guilty of no crime. Continue the exposure of these subversives that are so desperate to smear you for draining the swamp!'
+        "geo": twt["geo"], #> None or __________
         "created_at": twt["created_at"], #> 'Mon Dec 02 01:06:52 +0000 2019'
         "timestamp_ms": twt["timestamp_ms"],
-        "geo": twt["geo"], #> None or __________
-        "full_text": full_text, #> 'Refuse censure! Make them try to impeach and beat it. Mr President you are guilty of no crime. Continue the exposure of these subversives that are so desperate to smear you for draining the swamp!'
     }
 
     user = {
         "id_str": usr["id_str"],
         "screen_name": usr["screen_name"],
         "description": usr["description"],
-        #"utc_offset": usr["utc_offset"],
         "location": usr["location"],
         "verified": usr["verified"],
-        #"geo_enabled": usr["geo_enabled"],
     }
 
     return tweet, user
@@ -107,7 +105,10 @@ class TweetCollector(StreamListener):
             tweet, user = parse_status(status)
             pprint(tweet)
             pprint(user)
-            #collect(tweet, user)
+            if APP_ENV == "development":
+                append_to_csv(tweet, user)
+            elif APP_ENV == "production":
+                append_to_bq(tweet, user)
 
     def on_connect(self):
         print("LISTENER IS CONNECTED!")
