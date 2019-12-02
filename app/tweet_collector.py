@@ -8,6 +8,7 @@ from tweepy import OAuthHandler
 from tweepy import Stream
 
 from app import APP_ENV
+from app.storage_service import collect
 
 load_dotenv()
 
@@ -27,11 +28,33 @@ class TweetCollector(StreamListener):
         self.counter = 0
         self.max = 25 # TODO: config via env var
 
+    def on_status(self, status):
+        if self.is_collectable(status):
+            self.counter +=1
+            #if self.counter > self.max:
+            #    print("COLLECTION COMPLETE!")
+            #    print("SHUTTING DOWN...")
+            #    # TODO: exit() or return False or something
+            print("----------------")
+            print(f"DETECTED AN INCOMING TWEET! ({self.counter})")
+            #print(status.user.screen_name, "says:", status.text)
+            tweet, user = self.parse_status(status)
+            print("TWEET", tweet)
+            print("USER", user)
+            collect(tweet, user)
+
+    def is_collectable(self, status):
+        #if status.lang == "en" and status.user.verified:
+        if status.lang == "en":
+            return True
+        else:
+            return False
+
     def parse_status(self, status):
         twt = status._json
         usr = twt["user"]
 
-        if twt["truncated"] and twt["extended_tweet"]:
+        if "extended_tweet" in twt: # or twt["truncated"]:
             full_text = twt["extended_tweet"]["full_text"]
         else:
             full_text = twt["text"]
@@ -47,8 +70,8 @@ class TweetCollector(StreamListener):
 
         user = {
             "id_str": usr["id_str"],
-            "description": usr["description"],
             "screen_name": usr["screen_name"],
+            "description": usr["description"],
             "utc_offset": usr["utc_offset"],
             "location": usr["location"],
             "verified": usr["verified"],
@@ -56,27 +79,6 @@ class TweetCollector(StreamListener):
         }
 
         return tweet, user
-
-    def is_collectable(self, status):
-        if status.lang == "en" and status.user.verified:
-            return True
-        else:
-            return False
-
-    def on_status(self, status):
-        if self.is_collectable(status):
-            self.counter +=1
-            #if self.counter > self.max:
-            #    print("COLLECTION COMPLETE!")
-            #    print("SHUTTING DOWN...")
-            #    # TODO: exit() or return False or something
-            print("----------------")
-            print(f"DETECTED AN INCOMING TWEET! ({self.counter})")
-            #print(status.user.screen_name, "says:", status.text)
-            tweet, user = self.parse_status(status)
-            print("TWEET", tweet)
-            print("USER", user)
-            # todo: store tweet and user (to CSV in dev, to BQ in production)
 
     def on_connect(self):
         print("LISTENER IS CONNECTED!")

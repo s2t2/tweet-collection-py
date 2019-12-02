@@ -36,3 +36,17 @@ Run the tweet collector:
 ```sh
 python -m app.tweet_collector
 ```
+
+## Testing
+
+Install pytest:
+
+```sh
+pip install pytest # (first time only)
+```
+
+Run tests:
+
+```sh
+pytest --disable-pytest-warnings
+```
