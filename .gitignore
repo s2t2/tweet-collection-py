@@ -7,5 +7,4 @@ __pycache__
 
 *credentials.json
 
-data/tweets.csv
-data/users.csv
+data/*.csv

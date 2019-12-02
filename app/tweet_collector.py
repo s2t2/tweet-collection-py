@@ -77,7 +77,7 @@ def parse_status(status):
         #"timestamp_ms": twt["timestamp_ms"], Not in all tweets WAT?
         "user_id_str": usr["id_str"],
         "user_screen_name": usr["screen_name"],
-        "user_description": usr["description"],
+        "user_description": usr["description"].replace("\n"," "), # remove line breaks for cleaner storage
         "user_location": usr["location"],
         "user_verified": usr["verified"],
     }
