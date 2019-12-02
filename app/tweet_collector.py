@@ -70,6 +70,11 @@ def parse_status(status):
     twt = status._json
     usr = twt["user"]
 
+    if hasattr(usr, "description"):
+        user_description = usr["description"].replace("\n"," ")
+    else:
+        user_description = None
+
     tweet = {
         "id_str": twt["id_str"],
         "full_text": full_text, #> 'Refuse censure! Make them try to impeach and beat it. Mr President you are guilty of no crime. Continue the exposure of these subversives that are so desperate to smear you for draining the swamp!'
@@ -78,7 +83,7 @@ def parse_status(status):
         #"timestamp_ms": twt["timestamp_ms"], Not in all tweets WAT?
         "user_id_str": usr["id_str"],
         "user_screen_name": usr["screen_name"],
-        "user_description": usr["description"].replace("\n"," "), # remove line breaks for cleaner storage
+        "user_description": user_description, # remove line breaks for cleaner storage
         "user_location": usr["location"],
         "user_verified": usr["verified"],
     }
@@ -98,7 +103,7 @@ class TweetCollector(StreamListener):
         if is_collectable(status):
             self.counter +=1
             print("----------------")
-            print(f"DETECTED AN INCOMING TWEET! ({self.counter})")
+            print(f"DETECTED AN INCOMING TWEET! ({self.counter} -- {status.id_str})")
             tweet = parse_status(status)
             pprint(tweet)
             if APP_ENV == "development":
