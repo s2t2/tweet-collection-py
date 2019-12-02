@@ -18,13 +18,19 @@ ACCESS_KEY = os.getenv("TWITTER_ACCESS_TOKEN", default="OOPS")
 ACCESS_SECRET = os.getenv("TWITTER_ACCESS_TOKEN_SECRET", default="OOPS")
 
 TOPICS_LIST = ["impeach"] # todo: dynamically compile list from comma-separated env var string like "topic1,topic2"
+#TOPICS_LIST = ["impeach -filter:retweets"] # doesn't work
 
 def is_collectable(status):
     return (status.lang == "en"
             #and status.user.verified
             and status.in_reply_to_status_id == None
+            and status.in_reply_to_user_id == None
+            and status.in_reply_to_screen_name == None
             and status.is_quote_status == False
-            and status.retweeted_status == None)
+            and status.retweeted == False
+            #and status.retweeted_status == None #> AttributeError: 'Status' object has no attribute 'retweeted_status'
+            and not hasattr(status, "retweeted_status")
+    )
 
 def parse_full_text(status):
     #if hasattr(status, "retweeted_status"):
@@ -46,12 +52,12 @@ def parse_full_text(status):
     if hasattr(sts, "full_text"):
         full_text = sts.full_text
     elif hasattr(sts, "extended_tweet"):
-        full_text = sts.extended_tweet.full_text
+        full_text = sts.extended_tweet["full_text"]
     else:
         full_text = sts.text
 
     full_text = full_text.replace("\n"," ") # remove line breaks for cleaner storage
-    print(status.id_str, status.user.screen_name.upper(), "says:", full_text)
+    #print(status.id_str, status.user.screen_name.upper(), "says:", full_text)
 
     return full_text
 
@@ -99,6 +105,8 @@ class TweetCollector(StreamListener):
             print("----------------")
             print(f"DETECTED AN INCOMING TWEET! ({self.counter})")
             tweet, user = parse_status(status)
+            pprint(tweet)
+            pprint(user)
             #collect(tweet, user)
 
     def on_connect(self):
