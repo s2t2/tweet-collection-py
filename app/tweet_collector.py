@@ -33,6 +33,9 @@ def is_collectable(status):
     )
 
 def parse_full_text(status):
+    # GET FULL TEXT (THIS SHOULD BE EASIER)
+    # h/t: https://github.com/tweepy/tweepy/issues/974#issuecomment-383846209
+
     #if hasattr(status, "retweeted_status"):
     #    try:
     #        full_text = status.retweeted_status.extended_tweet["full_text"]
@@ -62,31 +65,24 @@ def parse_full_text(status):
     return full_text
 
 def parse_status(status):
+    full_text = parse_full_text(status)
     twt = status._json
     usr = twt["user"]
 
-    # GET FULL TEXT (THIS SHOULD BE EASIER)
-    # h/t: https://github.com/tweepy/tweepy/issues/974#issuecomment-383846209
-    full_text = parse_full_text(status)
-
     tweet = {
         "id_str": twt["id_str"],
-        "user_id_str": usr["id_str"], # FOREIGN KEY!
         "full_text": full_text, #> 'Refuse censure! Make them try to impeach and beat it. Mr President you are guilty of no crime. Continue the exposure of these subversives that are so desperate to smear you for draining the swamp!'
         "geo": twt["geo"], #> None or __________
         "created_at": twt["created_at"], #> 'Mon Dec 02 01:06:52 +0000 2019'
-        "timestamp_ms": twt["timestamp_ms"],
+        #"timestamp_ms": twt["timestamp_ms"], Not in all tweets WAT?
+        "user_id_str": usr["id_str"],
+        "user_screen_name": usr["screen_name"],
+        "user_description": usr["description"],
+        "user_location": usr["location"],
+        "user_verified": usr["verified"],
     }
 
-    user = {
-        "id_str": usr["id_str"],
-        "screen_name": usr["screen_name"],
-        "description": usr["description"],
-        "location": usr["location"],
-        "verified": usr["verified"],
-    }
-
-    return tweet, user
+    return tweet
 
 class TweetCollector(StreamListener):
 
@@ -102,13 +98,12 @@ class TweetCollector(StreamListener):
             self.counter +=1
             print("----------------")
             print(f"DETECTED AN INCOMING TWEET! ({self.counter})")
-            tweet, user = parse_status(status)
+            tweet = parse_status(status)
             pprint(tweet)
-            pprint(user)
             if APP_ENV == "development":
-                append_to_csv(tweet, user)
+                append_to_csv(tweet)
             elif APP_ENV == "production":
-                append_to_bq(tweet, user)
+                append_to_bq(tweet)
 
     def on_connect(self):
         print("LISTENER IS CONNECTED!")
