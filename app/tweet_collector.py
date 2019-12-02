@@ -19,6 +19,71 @@ ACCESS_SECRET = os.getenv("TWITTER_ACCESS_TOKEN_SECRET", default="OOPS")
 
 TOPICS_LIST = ["impeach"] # todo: dynamically compile list from comma-separated env var string like "topic1,topic2"
 
+def is_collectable(status):
+    return (status.lang == "en"
+            #and status.user.verified
+            and status.in_reply_to_status_id == None
+            and status.is_quote_status == False
+            and status.retweeted_status == None)
+
+def parse_full_text(status):
+    #if hasattr(status, "retweeted_status"):
+    #    try:
+    #        full_text = status.retweeted_status.extended_tweet["full_text"]
+    #    except:
+    #        full_text = status.retweeted_status.text
+    #else:
+    #    try:
+    #        full_text = status.extended_tweet["full_text"]
+    #    except AttributeError:
+    #        full_text = status.text
+
+    if hasattr(status, "retweeted_status"):
+        sts = status.retweeted_status
+    else:
+        sts = status
+
+    if hasattr(sts, "full_text"):
+        full_text = sts.full_text
+    elif hasattr(sts, "extended_tweet"):
+        full_text = sts.extended_tweet.full_text
+    else:
+        full_text = sts.text
+
+    full_text = full_text.replace("\n"," ") # remove line breaks for cleaner storage
+    print(status.id_str, status.user.screen_name.upper(), "says:", full_text)
+
+    return full_text
+
+def parse_status(status):
+    twt = status._json
+    usr = twt["user"]
+
+    # GET FULL TEXT (THIS SHOULD BE EASIER)
+    # h/t: https://github.com/tweepy/tweepy/issues/974#issuecomment-383846209
+    full_text = parse_full_text(status)
+
+    tweet = {
+        "id_str": twt["id_str"],
+        #"in_reply_to_status_id_str": twt["in_reply_to_status_id_str"],
+        "created_at": twt["created_at"], #> 'Mon Dec 02 01:06:52 +0000 2019'
+        "timestamp_ms": twt["timestamp_ms"],
+        "geo": twt["geo"], #> None or __________
+        "full_text": full_text, #> 'Refuse censure! Make them try to impeach and beat it. Mr President you are guilty of no crime. Continue the exposure of these subversives that are so desperate to smear you for draining the swamp!'
+    }
+
+    user = {
+        "id_str": usr["id_str"],
+        "screen_name": usr["screen_name"],
+        "description": usr["description"],
+        #"utc_offset": usr["utc_offset"],
+        "location": usr["location"],
+        "verified": usr["verified"],
+        #"geo_enabled": usr["geo_enabled"],
+    }
+
+    return tweet, user
+
 class TweetCollector(StreamListener):
 
     def __init__(self):
@@ -29,56 +94,12 @@ class TweetCollector(StreamListener):
         self.max = 25 # TODO: config via env var
 
     def on_status(self, status):
-        if self.is_collectable(status):
+        if is_collectable(status):
             self.counter +=1
-            #if self.counter > self.max:
-            #    print("COLLECTION COMPLETE!")
-            #    print("SHUTTING DOWN...")
-            #    # TODO: exit() or return False or something
             print("----------------")
             print(f"DETECTED AN INCOMING TWEET! ({self.counter})")
-            #print(status.user.screen_name, "says:", status.text)
-            tweet, user = self.parse_status(status)
-            print("TWEET", tweet)
-            print("USER", user)
-            collect(tweet, user)
-
-    def is_collectable(self, status):
-        #if status.lang == "en" and status.user.verified:
-        if status.lang == "en":
-            return True
-        else:
-            return False
-
-    def parse_status(self, status):
-        twt = status._json
-        usr = twt["user"]
-
-        if "extended_tweet" in twt: # or twt["truncated"]:
-            full_text = twt["extended_tweet"]["full_text"]
-        else:
-            full_text = twt["text"]
-
-        tweet = {
-            "id_str": twt["id_str"],
-            #"in_reply_to_status_id_str": twt["in_reply_to_status_id_str"],
-            "created_at": twt["created_at"], #> 'Mon Dec 02 01:06:52 +0000 2019'
-            #"timestamp_ms": twt["timestamp_ms"],
-            "geo": twt["geo"], #> None or __________
-            "full_text": full_text, #> 'Refuse censure! Make them try to impeach and beat it. Mr President you are guilty of no crime. Continue the exposure of these subversives that are so desperate to smear you for draining the swamp!'
-        }
-
-        user = {
-            "id_str": usr["id_str"],
-            "screen_name": usr["screen_name"],
-            "description": usr["description"],
-            "utc_offset": usr["utc_offset"],
-            "location": usr["location"],
-            "verified": usr["verified"],
-            #"geo_enabled": usr["geo_enabled"],
-        }
-
-        return tweet, user
+            tweet, user = parse_status(status)
+            #collect(tweet, user)
 
     def on_connect(self):
         print("LISTENER IS CONNECTED!")

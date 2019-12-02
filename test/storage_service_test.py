@@ -16,23 +16,32 @@ def test_collection():
 
     tweet = {
         'id_str': '1201316965991799999',
-        'created_at': 'Mon Dec 02 01:47:38 +0000 2019',
+        'created_at': 'Mon Dec 02 02:58:42 +0000 2019',
+        'timestamp_ms': '1575255522770'
         'geo': None,
-        'full_text': 'RT @OtherUser: There’s zero chance that 20 Republican senators have enough integrity to remove Trump from office. \n\nBut there are still 3 rea…'
+        'full_text': 'RT @OtherUser: There’s zero chance that 20 Republican senators have enough integrity to remove Trump from office. \n\nBut there are still 3 reasons to impeach him. A failure by Congress to respond to these abuses would effectively render the constitution meaningless.'
     }
     user = {
         'id_str': '18199999',
         'screen_name': 'User123',
         'description': 'Some profile content here.',
-        'utc_offset': None,
+        #'utc_offset': None,
         'location': 'NYC/Rockland County/Cape Cod ',
         'verified': True
     }
 
-    result = collect(tweet, user, tweets_filepath=TEST_TWEETS_FILEPATH, users_filepath=TEST_USERS_FILEPATH)
-
+    # if the local files don't already exist:
+    collect(tweet, user, tweets_filepath=TEST_TWEETS_FILEPATH, users_filepath=TEST_USERS_FILEPATH)
     assert os.path.isfile(TEST_TWEETS_FILEPATH)
-    assert os.path.isfile(TEST_USERS_FILEPATH)
-
+    #assert os.path.isfile(TEST_USERS_FILEPATH)
     tweets_df = pandas.read_csv(TEST_TWEETS_FILEPATH)
-    users_df = pandas.read_csv(TEST_TWEETS_FILEPATH)
+    #users_df = pandas.read_csv(TEST_USERS_FILEPATH)
+
+    assert len(tweets_df) == 1
+
+    # if the local files already exist:
+    collect(tweet, user, tweets_filepath=TEST_TWEETS_FILEPATH, users_filepath=TEST_USERS_FILEPATH)
+    tweets_df = pandas.read_csv(TEST_TWEETS_FILEPATH)
+    #users_df = pandas.read_csv(TEST_USERS_FILEPATH)
+
+    assert len(tweets_df) == 2
