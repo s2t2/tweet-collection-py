@@ -17,7 +17,8 @@ CONSUMER_SECRET = os.getenv("TWITTER_CONSUMER_SECRET", default="OOPS")
 ACCESS_KEY = os.getenv("TWITTER_ACCESS_TOKEN", default="OOPS")
 ACCESS_SECRET = os.getenv("TWITTER_ACCESS_TOKEN_SECRET", default="OOPS")
 
-TOPICS_LIST = ["impeach"] # todo: dynamically compile list from comma-separated env var string like "topic1,topic2"
+TOPICS_LIST = ["impeach", "impeachment"] # todo: dynamically compile list from comma-separated env var string like "topic1,topic2"
+# NOTE: "impeachment" keywords don't trigger the "impeach" filter, so adding "impeachment" as well
 #TOPICS_LIST = ["impeach -filter:retweets"] # doesn't work
 
 def is_collectable(status):
