@@ -23,9 +23,11 @@ def email_client():
 
 def send_email(subject, contents):
     subject += f" [env:{APP_ENV}]"
+    contents += f"<br>Sent at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
     to_emails = recipient_emails()
     print("SENDING EMAIL FROM:", FROM_EMAIL)
     print("SENDING EMAIL TO:", to_emails)
+
     message = Mail(from_email=FROM_EMAIL, to_emails=to_emails, subject=subject, html_content=contents)
     try:
         response = email_client().send(message)
@@ -38,8 +40,4 @@ def send_email(subject, contents):
 
 if __name__ == "__main__":
 
-    my_message = f"Testing the Notification Service"
-    my_message += "<br>"
-    my_message += f"Sent at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-
-    send_email(subject="Testing 123", contents=my_message)
+    send_email(subject="Testing 123", contents="Testing the Notification Service")
