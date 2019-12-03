@@ -28,17 +28,6 @@ def parse_full_text(status):
     # GET FULL TEXT (THIS SHOULD BE EASIER)
     # h/t: https://github.com/tweepy/tweepy/issues/974#issuecomment-383846209
 
-    #if hasattr(status, "retweeted_status"):
-    #    try:
-    #        full_text = status.retweeted_status.extended_tweet["full_text"]
-    #    except:
-    #        full_text = status.retweeted_status.text
-    #else:
-    #    try:
-    #        full_text = status.extended_tweet["full_text"]
-    #    except AttributeError:
-    #        full_text = status.text
-
     if hasattr(status, "retweeted_status"):
         sts = status.retweeted_status
     else:
