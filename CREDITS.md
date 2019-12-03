@@ -15,3 +15,7 @@
   + [Tweepy Streaming Guide](http://docs.tweepy.org/en/v3.8.0/streaming_how_to.html)
   + [Tweepy Streaming Source](https://github.com/tweepy/tweepy/blob/b3bc1f4236027fbb4ded83dc32fd8065612e2226/tweepy/streaming.py)
   + [Trying to exclude retweets from the stream](https://github.com/tweepy/tweepy/issues/1299)
+
+## SendGrid
+
+  + [SendGrid Notes](https://github.com/prof-rossetti/nyu-info-2335-201905/blob/master/notes/python/packages/sendgrid.md)
