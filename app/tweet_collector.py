@@ -103,9 +103,10 @@ class TweetCollector(StreamListener):
         print("LISTENER IS CONNECTED!")
 
     def on_exception(self, exception):
+        # has encountered errors:
+        #  + urllib3.exceptions.ProtocolError
         print("EXCEPTION:", type(exception))
         print(exception)
-        # like urllib3.exceptions.ProtocolError
         # TODO: send email and/or restart
 
     def on_error(self, status_code):
@@ -117,8 +118,7 @@ class TweetCollector(StreamListener):
 
     def on_timeout(self):
         print("TIMEOUT!")
-        #print("STAYING ALIVE...")
-        #return True # don't kill the stream! TODO: implement back-off
+        return True # don't kill the stream! TODO: implement back-off
 
     def on_warning(self, notice):
         print("DISCONNECTION WARNING:", type(notice))
@@ -139,6 +139,6 @@ if __name__ == "__main__":
     print("STREAM", type(stream))
 
     print("TOPICS:", TOPICS_LIST)
-    stream.filter(track=TOPICS_LIST) #TODO: track=listener.topics_list
+    stream.filter(track=TOPICS_LIST)
 
     # this never gets reached
