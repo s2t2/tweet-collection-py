@@ -61,7 +61,9 @@ def parse_status(status):
     twt = status._json
     usr = twt["user"]
 
-    user_description = usr["description"].replace("\n"," ") # expecting desc will be empty string (not None)
+    user_description = usr["description"] # can expect the attribute, but sometimes the value is null
+    if user_description:
+        user_description = user_description.replace("\n"," ")
 
     tweet = {
         "id_str": twt["id_str"],
@@ -103,6 +105,8 @@ class TweetCollector(StreamListener):
     def on_exception(self, exception):
         print("EXCEPTION:", type(exception))
         print(exception)
+        # like urllib3.exceptions.ProtocolError
+        # TODO: send email and/or restart
 
     def on_error(self, status_code):
         print("ERROR:", status_code)
