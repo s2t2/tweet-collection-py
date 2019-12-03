@@ -6,6 +6,7 @@ from tweepy import Stream
 
 from app import APP_ENV
 from app.twitter_service import twitter_api
+from app.notification_service import send_email
 from app.storage_service import append_to_csv, append_to_bq #, TWEET_COLUMNS, USER_COLUMNS
 
 TOPICS_LIST = ["impeach", "impeachment"] # todo: dynamically compile list from comma-separated env var string like "topic1,topic2"
@@ -79,6 +80,7 @@ class TweetCollector(StreamListener):
     def on_status(self, status):
         if is_collectable(status):
             self.counter +=1
+            ###if self.counter > 3: raise RuntimeError("OOPS") # UNCOMMENT TO TEST NOTIFICATION EMAILS
             print("----------------")
             print(f"DETECTED AN INCOMING TWEET! ({self.counter} -- {status.id_str})")
             tweet = parse_status(status)
@@ -94,28 +96,38 @@ class TweetCollector(StreamListener):
     def on_exception(self, exception):
         # has encountered errors:
         #  + urllib3.exceptions.ProtocolError
+        #  + urllib3.exceptions.ReadTimeoutError: HTTPSConnectionPool
         print("EXCEPTION:", type(exception))
         print(exception)
-        # TODO: send email and/or restart
+        contents = f"{type(exception)}<br>{exception}"
+        send_email(subject="Tweet Collection - Exception", contents=contents)
 
     def on_error(self, status_code):
         print("ERROR:", status_code)
+        contents = f"{type(status_code)}<br>{status_code}"
+        send_email(subject="Tweet Collection - Error", contents=contents)
 
     def on_limit(self, track):
         print("RATE LIMITING", type(track))
         print(track)
+        contents = f"{type(track)}<br>{track}"
+        send_email(subject="Tweet Collection - Rate Limit", contents=contents)
 
     def on_timeout(self):
         print("TIMEOUT!")
+        send_email(subject="Tweet Collection - Timeout", contents="Restarting...")
         return True # don't kill the stream! TODO: implement back-off
 
     def on_warning(self, notice):
         print("DISCONNECTION WARNING:", type(notice))
         print(notice)
+        contents = f"{type(notice)}<br>{notice}"
+        send_email(subject="Tweet Collection - Disconnect Warning", contents=contents)
 
     def on_disconnect(self, notice):
         print("DISCONNECT:", type(notice))
-        print(notice)
+        contents = f"{type(notice)}<br>{notice}"
+        send_email(subject="Tweet Collection - Disconnect", contents=contents)
 
 if __name__ == "__main__":
 
