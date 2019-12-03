@@ -1,21 +1,12 @@
 import os
 from pprint import pprint
 
-from dotenv import load_dotenv
-import tweepy
 from tweepy.streaming import StreamListener
-from tweepy import OAuthHandler
 from tweepy import Stream
 
 from app import APP_ENV
+from app.twitter_service import twitter_api
 from app.storage_service import append_to_csv, append_to_bq #, TWEET_COLUMNS, USER_COLUMNS
-
-load_dotenv()
-
-CONSUMER_KEY = os.getenv("TWITTER_CONSUMER_KEY", default="OOPS")
-CONSUMER_SECRET = os.getenv("TWITTER_CONSUMER_SECRET", default="OOPS")
-ACCESS_KEY = os.getenv("TWITTER_ACCESS_TOKEN", default="OOPS")
-ACCESS_SECRET = os.getenv("TWITTER_ACCESS_TOKEN_SECRET", default="OOPS")
 
 TOPICS_LIST = ["impeach", "impeachment"] # todo: dynamically compile list from comma-separated env var string like "topic1,topic2"
 # NOTE: "impeachment" keywords don't trigger the "impeach" filter, so adding "impeachment" as well
@@ -70,10 +61,7 @@ def parse_status(status):
     twt = status._json
     usr = twt["user"]
 
-    if hasattr(usr, "description"):
-        user_description = usr["description"].replace("\n"," ")
-    else:
-        user_description = None
+    user_description = usr["description"].replace("\n"," ") # expecting desc will be empty string (not None)
 
     tweet = {
         "id_str": twt["id_str"],
@@ -93,11 +81,9 @@ def parse_status(status):
 class TweetCollector(StreamListener):
 
     def __init__(self):
-        self.auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
-        self.auth.set_access_token(ACCESS_KEY, ACCESS_SECRET)
-        self.api = tweepy.API(self.auth)
+        self.api = twitter_api()
+        self.auth = self.api.auth
         self.counter = 0
-        self.max = 25 # TODO: config via env var
 
     def on_status(self, status):
         if is_collectable(status):

@@ -30,6 +30,7 @@ def test_get_status(my_status, rr_status):
 
 def test_parse_status(my_status, rr_status):
     my_tweet = parse_status(my_status)
+
     assert my_tweet == {
         'id_str': '1201357629928411136',
         'full_text': 'Testing new script to collect tweets (not RTs) containing the term: impeach',
