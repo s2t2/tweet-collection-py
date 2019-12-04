@@ -23,7 +23,13 @@ Create a ".env" file and set your environment variables there. See the ".env.exa
 
 ### Google API Credentials
 
-Download your Google Cloud API service account credentials and set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable accordingly.
+To store tweets to a local CSV file, skip this section. Otherwise, to store tweets in Google Big Query, set the `STORAGE_ENV` environment variable to "remote" and continue...
+
+Login to the [Google Big Query console](https://console.cloud.google.com/bigquery), create a dataset called something like "impeachment" and set the `BQ_DATASET_NAME` environment variable accordingly. Within it, create a table called something like "tweets", and set the `BQ_TABLE_NAME` environment variable accordingly. Use the following table schema:
+
+    id_str:STRING,full_text:STRING,geo:STRING,created_at:TIMESTAMP,user_id_str:STRING,user_screen_name:STRING,user_description:STRING,user_location:STRING,user_verified:BOOLEAN
+
+From the Google Cloud console, enable the BigQuery API, then generate and download the corresponding service account credentials and set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable accordingly.
 
 ### Twitter API Credentials
 
@@ -37,10 +43,18 @@ Finally set the `FROM_EMAIL` and `TO_EMAILS` environment variables to designate 
 
 ## Usage
 
+Test the storage service:
+
+```sh
+python -m app.storage_service
+```
+
 Run the tweet collector:
 
 ```sh
 python -m app.tweet_collector
+
+# BATCH_SIZE=200 STORAGE_ENV="remote" python -m app.tweet_collector
 ```
 
 ## Testing

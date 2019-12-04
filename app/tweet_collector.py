@@ -3,15 +3,18 @@ from pprint import pprint
 
 from tweepy.streaming import StreamListener
 from tweepy import Stream
+from urllib3.exceptions import ProtocolError
 
-from app import APP_ENV
+from app import STORAGE_ENV
 from app.twitter_service import twitter_api
 from app.notification_service import send_email
-from app.storage_service import append_to_csv, append_to_bq #, TWEET_COLUMNS, USER_COLUMNS
+from app.storage_service import append_to_csv, BigQueryService
 
 TOPICS_LIST = ["impeach", "impeachment"] # todo: dynamically compile list from comma-separated env var string like "topic1,topic2"
 # NOTE: "impeachment" keywords don't trigger the "impeach" filter, so adding "impeachment" as well
 #TOPICS_LIST = ["impeach -filter:retweets"] # doesn't work
+
+BATCH_SIZE = int(os.getenv("BATCH_SIZE", default="20"))
 
 def is_collectable(status):
     return (status.lang == "en"
@@ -46,8 +49,10 @@ def parse_full_text(status):
 
     return full_text
 
+def parse_timestamp(status):
+    return status.created_at.strftime("%Y-%m-%d %H:%M:%S")
+
 def parse_status(status):
-    full_text = parse_full_text(status)
     twt = status._json
     usr = twt["user"]
 
@@ -57,45 +62,61 @@ def parse_status(status):
 
     tweet = {
         "id_str": twt["id_str"],
-        "full_text": full_text, #> 'Refuse censure! Make them try to impeach and beat it. Mr President you are guilty of no crime. Continue the exposure of these subversives that are so desperate to smear you for draining the swamp!'
-        "geo": twt["geo"], #> None or __________
-        "created_at": twt["created_at"], #> 'Mon Dec 02 01:06:52 +0000 2019'
-        #"timestamp_ms": twt["timestamp_ms"], Not in all tweets WAT?
+        "full_text": parse_full_text(status),
+        "geo": twt["geo"],
+        "created_at": parse_timestamp(status),
         "user_id_str": usr["id_str"],
         "user_screen_name": usr["screen_name"],
         "user_description": user_description, # remove line breaks for cleaner storage
         "user_location": usr["location"],
         "user_verified": usr["verified"],
     }
-
     return tweet
 
 class TweetCollector(StreamListener):
 
-    def __init__(self):
+    def __init__(self, batch_size=BATCH_SIZE):
         self.api = twitter_api()
         self.auth = self.api.auth
         self.counter = 0
+        self.bq_service = BigQueryService()
+        self.batch_size = batch_size
+        self.batch = []
+
+    def collect(self, tweet):
+        """
+        Moving this logic out of on_status in hopes of preventing ProtocolErrors
+        Storing in batches to reduce API calls, and in hopes of preventing ProtocolErrors
+        """
+        self.batch.append(tweet)
+
+        if len(self.batch) >= self.batch_size:
+            print("STORING BATCH OF", len(self.batch), "TWEETS...")
+            if STORAGE_ENV == "local":
+                append_to_csv(self.batch)
+            elif STORAGE_ENV == "remote":
+                self.bq_service.append_to_bq(self.batch)
+            print("CLEARING BATCH AND COUNTER...")
+            self.batch = []
+            self.counter = 0
 
     def on_status(self, status):
         if is_collectable(status):
             self.counter +=1
-            ###if self.counter > 3: raise RuntimeError("OOPS") # UNCOMMENT TO TEST NOTIFICATION EMAILS
+            ###if self.counter > 3: raise RuntimeError("OOPS")
+            ###if self.counter > 3: raise ProtocolError("OOPS")
             print("----------------")
             print(f"DETECTED AN INCOMING TWEET! ({self.counter} -- {status.id_str})")
             tweet = parse_status(status)
             pprint(tweet)
-            if APP_ENV == "development":
-                append_to_csv(tweet)
-            elif APP_ENV == "production":
-                append_to_bq(tweet)
+            self.collect(tweet)
 
     def on_connect(self):
         print("LISTENER IS CONNECTED!")
 
     def on_exception(self, exception):
         # has encountered errors:
-        #  + urllib3.exceptions.ProtocolError
+        #  + urllib3.exceptions.ProtocolError: ('Connection broken: IncompleteRead(0 bytes read)'
         #  + urllib3.exceptions.ReadTimeoutError: HTTPSConnectionPool
         print("EXCEPTION:", type(exception))
         print(exception)
@@ -131,7 +152,7 @@ class TweetCollector(StreamListener):
 
 if __name__ == "__main__":
 
-    print("COLLECTING TWEETS IN", APP_ENV.upper())
+    print("COLLECTING TWEETS TO", STORAGE_ENV.upper(), "STORAGE")
 
     listener = TweetCollector()
     print("LISTENER", type(listener))
@@ -140,6 +161,14 @@ if __name__ == "__main__":
     print("STREAM", type(stream))
 
     print("TOPICS:", TOPICS_LIST)
-    stream.filter(track=TOPICS_LIST)
+    #stream.filter(track=TOPICS_LIST)
+    # handle ProtocolErrors...
+    while True:
+        try:
+            stream.filter(track=TOPICS_LIST)
+        except ProtocolError:
+            print("--------------------------------")
+            print("RESTARTING AFTER PROTOCOL ERROR!")
+            continue
 
     # this never gets reached
