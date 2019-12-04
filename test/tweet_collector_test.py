@@ -1,7 +1,7 @@
 from pprint import pprint
 
 from app.tweet_collector import (TweetCollector,
-    is_collectable, parse_status, parse_full_text, parse_timestamp
+    is_collectable, parse_status, parse_full_text, parse_timestamp, backoff_strategy
 )
 
 def test_get_status(my_status, rr_status):
@@ -61,3 +61,7 @@ def test_parse_status(my_status, rr_status):
 def test_parse_timestamp(my_status):
     # BQ says... Required format is YYYY-MM-DD HH:MM[:SS[.SSSSSS]];
     assert parse_timestamp(my_status) == "2019-12-02 04:29:13"
+
+def test_backoff_strategy():
+    assert backoff_strategy(2) == 9
+    assert backoff_strategy(7) == 64
