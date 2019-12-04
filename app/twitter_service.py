@@ -13,8 +13,8 @@ ACCESS_SECRET = os.getenv("TWITTER_ACCESS_TOKEN_SECRET", default="OOPS")
 def twitter_api():
     auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
     auth.set_access_token(ACCESS_KEY, ACCESS_SECRET)
-    api = tweepy.API(auth, wait_on_rate_limit=True)
-    return api # consider returning the auth as well
+    api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
+    return api
 
 if __name__ == "__main__":
     api = twitter_api()

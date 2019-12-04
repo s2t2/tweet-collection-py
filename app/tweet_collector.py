@@ -74,6 +74,13 @@ def parse_status(status):
     }
     return tweet
 
+def backoff_strategy(i):
+    """
+    Param: i (int) increasing rate limit number from the twitter api
+    Returns: number of seconds to sleep for
+    """
+    return (int(i) + 1) ** 2 # raise to the power of two
+
 class TweetCollector(StreamListener):
 
     def __init__(self, batch_size=BATCH_SIZE):
@@ -131,12 +138,11 @@ class TweetCollector(StreamListener):
         #send_email(subject="Tweet Collection - Error", contents=contents)
 
     def on_limit(self, track):
-        """Param: track (int) starts low and then gets exponentially higher (max observed is 506)"""
-        print("RATE LIMITING", type(track))
-        print(track)
+        """Param: track (int) starts low and subsequently increases"""
+        print("RATE LIMITING", track)
         #contents = f"{type(track)}<br>{track}"
         #send_email(subject="Tweet Collection - Rate Limit", contents=contents)
-        sleep_seconds = (int(track) + 1) ** 2 # raise to the power of two
+        sleep_seconds = backoff_strategy(track)
         print("SLEEPING FOR:", sleep_seconds, "SECONDS...")
         sleep(sleep_seconds)
 
