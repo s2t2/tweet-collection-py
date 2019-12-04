@@ -1,6 +1,8 @@
 from pprint import pprint
 
-from app.tweet_collector import TweetCollector, parse_full_text, is_collectable, parse_status
+from app.tweet_collector import (TweetCollector,
+    is_collectable, parse_status, parse_full_text, parse_timestamp
+)
 
 def test_get_status(my_status, rr_status):
     ORIGINAL_TEXT = 'There’s zero chance that 20 Republican senators have enough integrity to remove Trump from office.   But there are still 3 reasons to impeach him. A failure by Congress to respond to these abuses would effectively render the constitution meaningless. https://t.co/y60SDLGekb'
@@ -35,7 +37,7 @@ def test_parse_status(my_status, rr_status):
         'id_str': '1201357629928411136',
         'full_text': 'Testing new script to collect tweets (not RTs) containing the term: impeach',
         'geo': None,
-        'created_at': 'Mon Dec 02 04:29:13 +0000 2019',
+        'created_at': '2019-12-02 04:29:13',
         'user_id_str': '985535135956291585',
         'user_screen_name': 'prof_rossetti',
         'user_description': 'an account for experimenting with research and development using the Twitter API. nothing to see here!',
@@ -48,10 +50,14 @@ def test_parse_status(my_status, rr_status):
         'id_str': '1201308452850675712',
         'full_text': 'There’s zero chance that 20 Republican senators have enough integrity to remove Trump from office.   But there are still 3 reasons to impeach him. A failure by Congress to respond to these abuses would effectively render the constitution meaningless. https://t.co/y60SDLGekb',
         'geo': None,
-        'created_at': 'Mon Dec 02 01:13:49 +0000 2019',
+        'created_at': '2019-12-02 01:13:49',
         'user_id_str': '148529707',
         'user_screen_name': 'RBReich',
         'user_description': 'Berkeley prof, former Sec. of Lab. @InequalityMedia. Movies "Saving Capitalism" & "Inequality for All" on Netflix. Books: The Common Good, Saving Capitalism,etc',
         'user_location': 'Berkeley, CA',
         'user_verified': True
     }
+
+def test_parse_timestamp(my_status):
+    # BQ says... Required format is YYYY-MM-DD HH:MM[:SS[.SSSSSS]];
+    assert parse_timestamp(my_status) == "2019-12-02 04:29:13"

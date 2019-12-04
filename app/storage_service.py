@@ -66,18 +66,13 @@ if __name__ == "__main__":
         'id_str': '12345',
         'full_text': 'Inserting a row',
         'geo': None,
-        'created_at': 'Mon Dec 02 04:29:13 +0000 2019',
+        'created_at': '2019-12-02 01:13:49',
         'user_id_str': '98776655443',
         'user_screen_name': 'user123',
         'user_description': 'Testing the storage service',
         'user_location': '',
-        'user_verified': "False" # False
+        'user_verified': False
     }
-
-    #rows_to_insert = [
-    #    ('a', 32),
-    #    ('b', 29),
-    #]
 
     rows_to_insert = [list(new_tweet.values())]
 

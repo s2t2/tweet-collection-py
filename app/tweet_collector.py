@@ -46,8 +46,10 @@ def parse_full_text(status):
 
     return full_text
 
+def parse_timestamp(status):
+    return status.created_at.strftime("%Y-%m-%d %H:%M:%S")
+
 def parse_status(status):
-    full_text = parse_full_text(status)
     twt = status._json
     usr = twt["user"]
 
@@ -55,22 +57,17 @@ def parse_status(status):
     if user_description:
         user_description = user_description.replace("\n"," ")
 
-    # BQ says... Required format is YYYY-MM-DD HH:MM[:SS[.SSSSSS]];
-    #created_at =
-
     tweet = {
         "id_str": twt["id_str"],
-        "full_text": full_text, #> 'Refuse censure! Make them try to impeach and beat it. Mr President you are guilty of no crime. Continue the exposure of these subversives that are so desperate to smear you for draining the swamp!'
-        "geo": twt["geo"], #> None or __________
-        "created_at": twt["created_at"], #> 'Mon Dec 02 01:06:52 +0000 2019'
-        #"timestamp_ms": twt["timestamp_ms"], Not in all tweets WAT?
+        "full_text": parse_full_text(status),
+        "geo": twt["geo"],
+        "created_at": parse_timestamp(status),
         "user_id_str": usr["id_str"],
         "user_screen_name": usr["screen_name"],
         "user_description": user_description, # remove line breaks for cleaner storage
         "user_location": usr["location"],
         "user_verified": usr["verified"],
     }
-
     return tweet
 
 class TweetCollector(StreamListener):
@@ -88,6 +85,8 @@ class TweetCollector(StreamListener):
             print(f"DETECTED AN INCOMING TWEET! ({self.counter} -- {status.id_str})")
             tweet = parse_status(status)
             pprint(tweet)
+
+            # CONSIDER APPENDING IN BATCHES INSTEAD...
             if APP_ENV == "development":
                 append_to_csv(tweet)
             elif APP_ENV == "production":

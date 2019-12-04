@@ -25,11 +25,6 @@ Create a ".env" file and set your environment variables there. See the ".env.exa
 
 Login to the [Google Big Query console](https://console.cloud.google.com/bigquery), create a dataset called something like "impeachment" and set the `BQ_DATASET_NAME` environment variable accordingly. Within it, create a table called something like "tweets", and set the `BQ_TABLE_NAME` environment variable accordingly. Use the following table schema:
 
-    id_str:STRING,full_text:STRING,geo:STRING,created_at:STRING,user_id_str:STRING,user_screen_name:STRING,user_description:STRING,user_location:STRING,user_verified:STRING
-
-
-TODO:
-
     id_str:STRING,full_text:STRING,geo:STRING,created_at:TIMESTAMP,user_id_str:STRING,user_screen_name:STRING,user_description:STRING,user_location:STRING,user_verified:BOOLEAN
 
 From the Google Cloud console, enable the BigQuery API, then generate and download the corresponding service account credentials and set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable accordingly.
