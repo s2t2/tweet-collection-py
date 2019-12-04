@@ -3,6 +3,7 @@ from pprint import pprint
 
 from tweepy.streaming import StreamListener
 from tweepy import Stream
+from urllib3.exceptions import ProtocolError
 
 from app import STORAGE_ENV
 from app.twitter_service import twitter_api
@@ -80,7 +81,8 @@ class TweetCollector(StreamListener):
     def on_status(self, status):
         if is_collectable(status):
             self.counter +=1
-            ###if self.counter > 3: raise RuntimeError("OOPS") # UNCOMMENT TO TEST NOTIFICATION EMAILS
+            ###if self.counter > 3: raise RuntimeError("OOPS")
+            ###if self.counter > 3: raise ProtocolError("OOPS")
             print("----------------")
             print(f"DETECTED AN INCOMING TWEET! ({self.counter} -- {status.id_str})")
             tweet = parse_status(status)
@@ -142,6 +144,14 @@ if __name__ == "__main__":
     print("STREAM", type(stream))
 
     print("TOPICS:", TOPICS_LIST)
-    stream.filter(track=TOPICS_LIST)
+    #stream.filter(track=TOPICS_LIST)
+    # handle ProtocolErrors...
+    while True:
+        try:
+            stream.filter(track=TOPICS_LIST)
+        except ProtocolError:
+            print("--------------------------------")
+            print("RESTARTING AFTER PROTOCOL ERROR!")
+            continue
 
     # this never gets reached
