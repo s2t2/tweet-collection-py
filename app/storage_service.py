@@ -43,14 +43,46 @@ if __name__ == "__main__":
     print("SQL:", sql)
 
     job = client.query(sql)
+    print("--------------------")
     print("JOB", type(job))
     results = job.result()
     print("RESULTS", type(results)) #>  <class 'google.cloud.bigquery.table.RowIterator'>
-    print("NUM ROWS (W/ HEADER):", results.total_rows)
+    print("NUM ROWS:", results.total_rows)
 
+    print("--------------------")
     for row in results:
         #print("ROW", type(row)) #> <class 'google.cloud.bigquery.table.Row'>
         print(row)
         print("---")
 
-    breakpoint()
+    print("--------------------")
+    print("ADDING A RECORD...")
+
+    dataset_ref = client.dataset(BQ_DATASET_NAME)
+    table_ref = dataset_ref.table(BQ_TABLE_NAME)
+    table = client.get_table(table_ref) # a call
+
+    new_tweet = {
+        'id_str': '12345',
+        'full_text': 'Inserting a row',
+        'geo': None,
+        'created_at': 'Mon Dec 02 04:29:13 +0000 2019',
+        'user_id_str': '98776655443',
+        'user_screen_name': 'user123',
+        'user_description': 'Testing the storage service',
+        'user_location': '',
+        'user_verified': "False" # False
+    }
+
+    #rows_to_insert = [
+    #    ('a', 32),
+    #    ('b', 29),
+    #]
+
+    rows_to_insert = [list(new_tweet.values())]
+
+    errors = client.insert_rows(table, rows_to_insert)
+
+    print("--------------------")
+    print("ERRORS?:")
+    print(errors)
