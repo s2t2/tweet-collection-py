@@ -42,21 +42,21 @@ if __name__ == "__main__":
 
     bq_service = BigQueryService()
 
-    print("--------------------")
-    print("ADDING A RECORD...")
-    new_tweet = {
-        'id_str': '12345',
-        'full_text': 'Inserting a row',
-        'geo': None,
-        'created_at': '2019-12-02 01:13:49',
-        'user_id_str': '98776655443',
-        'user_screen_name': 'user123',
-        'user_description': 'Testing the storage service',
-        'user_location': '',
-        'user_verified': False
-    }
-    errors = bq_service.append_to_bq([new_tweet])
-    print("ERRORS:", errors)
+    #print("--------------------")
+    #print("ADDING A RECORD...")
+    #new_tweet = {
+    #    'id_str': '12345',
+    #    'full_text': 'Inserting a row',
+    #    'geo': None,
+    #    'created_at': '2019-12-02 01:13:49',
+    #    'user_id_str': '98776655443',
+    #    'user_screen_name': 'user123',
+    #    'user_description': 'Testing the storage service',
+    #    'user_location': '',
+    #    'user_verified': False
+    #}
+    #errors = bq_service.append_to_bq([new_tweet])
+    #print("ERRORS:", errors)
 
     print("--------------------")
     print("FETCHING RECORDS...")
