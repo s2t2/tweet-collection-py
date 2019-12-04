@@ -15,7 +15,8 @@ TOPICS_LIST = ["impeach", "impeachment"] # todo: dynamically compile list from c
 # NOTE: "impeachment" keywords don't trigger the "impeach" filter, so adding "impeachment" as well
 #TOPICS_LIST = ["impeach -filter:retweets"] # doesn't work
 
-BATCH_SIZE = int(os.getenv("BATCH_SIZE", default="20"))
+BATCH_SIZE = int(os.getenv("BATCH_SIZE", default="20")) # coerces to int
+WILL_NOTIFY = (os.getenv("WILL_NOTIFY", default="False") == "True") # coerces to bool
 
 def is_collectable(status):
     return (status.lang == "en"
@@ -83,13 +84,14 @@ def backoff_strategy(i):
 
 class TweetCollector(StreamListener):
 
-    def __init__(self, batch_size=BATCH_SIZE):
+    def __init__(self, batch_size=BATCH_SIZE, will_notify=WILL_NOTIFY):
         self.api = twitter_api()
         self.auth = self.api.auth
         self.counter = 0
         self.bq_service = BigQueryService()
         self.batch_size = batch_size
         self.batch = []
+        self.will_notify = (will_notify == True)
 
     def collect(self, tweet):
         """
@@ -122,6 +124,7 @@ class TweetCollector(StreamListener):
 
     def on_connect(self):
         print("LISTENER IS CONNECTED!")
+        print("LISTENER WILL NOTIFY:", self.will_notify)
 
     def on_exception(self, exception):
         # has encountered errors:
@@ -129,38 +132,44 @@ class TweetCollector(StreamListener):
         #  + urllib3.exceptions.ReadTimeoutError: HTTPSConnectionPool
         print("EXCEPTION:", type(exception))
         print(exception)
-        #contents = f"{type(exception)}<br>{exception}"
-        #send_email(subject="Tweet Collection - Exception", contents=contents)
+        if self.will_notify:
+            contents = f"{type(exception)}<br>{exception}"
+            send_email(subject="Tweet Collection - Exception", contents=contents)
 
     def on_error(self, status_code):
         print("ERROR:", status_code)
-        #contents = f"{type(status_code)}<br>{status_code}"
-        #send_email(subject="Tweet Collection - Error", contents=contents)
+        if self.will_notify:
+            contents = f"{type(status_code)}<br>{status_code}"
+            send_email(subject="Tweet Collection - Error", contents=contents)
 
     def on_limit(self, track):
         """Param: track (int) starts low and subsequently increases"""
         print("RATE LIMITING", track)
-        #contents = f"{type(track)}<br>{track}"
-        #send_email(subject="Tweet Collection - Rate Limit", contents=contents)
+        if self.will_notify:
+            contents = f"{type(track)}<br>{track}"
+            send_email(subject="Tweet Collection - Rate Limit", contents=contents)
         sleep_seconds = backoff_strategy(track)
         print("SLEEPING FOR:", sleep_seconds, "SECONDS...")
         sleep(sleep_seconds)
 
     def on_timeout(self):
         print("TIMEOUT!")
-        #send_email(subject="Tweet Collection - Timeout", contents="Restarting...")
+        if self.will_notify:
+            send_email(subject="Tweet Collection - Timeout", contents="Restarting...")
         return True # don't kill the stream! TODO: implement back-off
 
     def on_warning(self, notice):
         print("DISCONNECTION WARNING:", type(notice))
         print(notice)
-        #contents = f"{type(notice)}<br>{notice}"
-        #send_email(subject="Tweet Collection - Disconnect Warning", contents=contents)
+        if self.will_notify:
+            contents = f"{type(notice)}<br>{notice}"
+            send_email(subject="Tweet Collection - Disconnect Warning", contents=contents)
 
     def on_disconnect(self, notice):
         print("DISCONNECT:", type(notice))
-        #contents = f"{type(notice)}<br>{notice}"
-        #send_email(subject="Tweet Collection - Disconnect", contents=contents)
+        if self.will_notify:
+            contents = f"{type(notice)}<br>{notice}"
+            send_email(subject="Tweet Collection - Disconnect", contents=contents)
 
 if __name__ == "__main__":
 

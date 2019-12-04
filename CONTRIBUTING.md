@@ -55,6 +55,7 @@ Run the tweet collector:
 python -m app.tweet_collector
 
 # BATCH_SIZE=200 STORAGE_ENV="remote" python -m app.tweet_collector
+# APP_ENV="production" STORAGE_ENV="remote" WILL_NOTIFY=True python -m app.tweet_collector
 ```
 
 ## Testing
