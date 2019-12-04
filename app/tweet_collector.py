@@ -94,8 +94,9 @@ class TweetCollector(StreamListener):
                 append_to_csv(self.batch)
             elif STORAGE_ENV == "remote":
                 self.bq_service.append_to_bq(self.batch)
-            print("CLEARING BATCH...")
+            print("CLEARING BATCH AND COUNTER...")
             self.batch = []
+            self.counter = 0
 
     def on_status(self, status):
         if is_collectable(status):
