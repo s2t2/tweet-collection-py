@@ -7,7 +7,7 @@ from tweepy import Stream
 from app import APP_ENV
 from app.twitter_service import twitter_api
 from app.notification_service import send_email
-from app.storage_service import append_to_csv, append_to_bq #, TWEET_COLUMNS, USER_COLUMNS
+from app.storage_service import append_to_csv, append_to_bq
 
 TOPICS_LIST = ["impeach", "impeachment"] # todo: dynamically compile list from comma-separated env var string like "topic1,topic2"
 # NOTE: "impeachment" keywords don't trigger the "impeach" filter, so adding "impeachment" as well
@@ -54,6 +54,9 @@ def parse_status(status):
     user_description = usr["description"] # can expect the attribute, but sometimes the value is null
     if user_description:
         user_description = user_description.replace("\n"," ")
+
+    # BQ says... Required format is YYYY-MM-DD HH:MM[:SS[.SSSSSS]];
+    #created_at =
 
     tweet = {
         "id_str": twt["id_str"],

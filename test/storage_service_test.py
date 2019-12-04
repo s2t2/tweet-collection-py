@@ -1,7 +1,7 @@
 import os
 import pandas
 
-from app.storage_service import append_to_csv
+from app.storage_service import append_to_csv, append_to_bq
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 TWEETS_CSV_FILEPATH = os.path.join(DATA_DIR, "tweets.csv")
@@ -34,3 +34,9 @@ def test_csv_collection():
     append_to_csv(tweet, tweets_filepath=TWEETS_CSV_FILEPATH)
     tweets_df = pandas.read_csv(TWEETS_CSV_FILEPATH)
     assert len(tweets_df) == 2
+
+def test_bq_schema():
+    pass
+
+def test_bq_collection():
+    pass

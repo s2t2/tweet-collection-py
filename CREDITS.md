@@ -19,3 +19,7 @@
 ## SendGrid
 
   + [SendGrid Notes](https://github.com/prof-rossetti/nyu-info-2335-201905/blob/master/notes/python/packages/sendgrid.md)
+
+## Big Query
+
+  + [Basic tutorial](https://blog.morizyun.com/python/library-bigquery-google-cloud.html)
