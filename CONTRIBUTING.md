@@ -137,7 +137,7 @@ Run the collection script in production, manually:
 heroku run "python -m app.tweet_collector"
 ```
 
-... though ultimately you'll want to setup a Heroku "dyno" to run the collection script as a background process (see the "Procfile"):
+... though ultimately you'll want to setup a Heroku "dyno" (hobby tier) to run the collection script as a background process (see the "Procfile"):
 
 ```sh
 heroku run collector
