@@ -73,9 +73,6 @@ pytest --disable-pytest-warnings
 
 ## Deploying
 
-
-## Deploying
-
 Create a new app server (first time only):
 
 ```sh
