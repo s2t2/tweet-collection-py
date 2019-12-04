@@ -24,44 +24,26 @@ def append_to_csv(tweet, tweets_filepath=TWEETS_CSV_FILEPATH):
     else:
         new_df.to_csv(tweets_filepath, index=False)
 
-def append_to_bq(tweet, user):
-    print("SAVING TO BIG QUERY... (TODO)")
+def bq_client():
+    return bigquery.Client()
 
-if __name__ == "__main__":
-    print("STORAGE SERVICE...")
+def append_to_bq(tweets):
+    rows_to_insert = [list(twt.values()) for twt in tweets]
 
-    client = bigquery.Client()
-    print("BQ CLIENT", type(client)) #> <class 'google.cloud.bigquery.client.Client'>
-
-    sql = f"""
-        SELECT
-            id_str, full_text, geo, created_at,
-            user_id_str, user_screen_name, user_description, user_location, user_verified
-        FROM `{BQ_PROJECT_NAME}.{BQ_DATASET_NAME}.{BQ_TABLE_NAME}`
-        LIMIT 10
-    """
-    print("SQL:", sql)
-
-    job = client.query(sql)
-    print("--------------------")
-    print("JOB", type(job))
-    results = job.result()
-    print("RESULTS", type(results)) #>  <class 'google.cloud.bigquery.table.RowIterator'>
-    print("NUM ROWS:", results.total_rows)
-
-    print("--------------------")
-    for row in results:
-        #print("ROW", type(row)) #> <class 'google.cloud.bigquery.table.Row'>
-        print(row)
-        print("---")
-
-    print("--------------------")
-    print("ADDING A RECORD...")
-
+    client = bq_client()
     dataset_ref = client.dataset(BQ_DATASET_NAME)
     table_ref = dataset_ref.table(BQ_TABLE_NAME)
     table = client.get_table(table_ref) # a call
 
+    errors = client.insert_rows(table, rows_to_insert)
+    return errors
+
+
+if __name__ == "__main__":
+    print("STORAGE SERVICE...")
+
+    print("--------------------")
+    print("ADDING A RECORD...")
     new_tweet = {
         'id_str': '12345',
         'full_text': 'Inserting a row',
@@ -73,11 +55,27 @@ if __name__ == "__main__":
         'user_location': '',
         'user_verified': False
     }
-
-    rows_to_insert = [list(new_tweet.values())]
-
-    errors = client.insert_rows(table, rows_to_insert)
+    errors = append_to_bq([new_tweet])
+    print("ERRORS:", errors)
 
     print("--------------------")
-    print("ERRORS?:")
-    print(errors)
+    print("FETCHING RECORDS...")
+    client = bq_client()
+    #print("BQ CLIENT", type(client)) #> <class 'google.cloud.bigquery.client.Client'>
+    sql = f"""
+        SELECT
+            id_str, full_text, geo, created_at,
+            user_id_str, user_screen_name, user_description, user_location, user_verified
+        FROM `{BQ_PROJECT_NAME}.{BQ_DATASET_NAME}.{BQ_TABLE_NAME}`
+        LIMIT 10
+    """
+    #print("SQL:", sql)
+    job = client.query(sql)
+    #print("JOB", type(job))
+    results = job.result()
+    #print("RESULTS", type(results)) #>  <class 'google.cloud.bigquery.table.RowIterator'>
+    print("NUM ROWS:", results.total_rows)
+    for row in results:
+        #print("ROW", type(row)) #> <class 'google.cloud.bigquery.table.Row'>
+        print(row)
+        print("---")

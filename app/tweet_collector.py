@@ -4,7 +4,7 @@ from pprint import pprint
 from tweepy.streaming import StreamListener
 from tweepy import Stream
 
-from app import APP_ENV
+from app import STORAGE_ENV
 from app.twitter_service import twitter_api
 from app.notification_service import send_email
 from app.storage_service import append_to_csv, append_to_bq
@@ -87,10 +87,10 @@ class TweetCollector(StreamListener):
             pprint(tweet)
 
             # CONSIDER APPENDING IN BATCHES INSTEAD...
-            if APP_ENV == "development":
+            if STORAGE_ENV == "local":
                 append_to_csv(tweet)
-            elif APP_ENV == "production":
-                append_to_bq(tweet)
+            elif STORAGE_ENV == "remote":
+                append_to_bq([tweet])
 
     def on_connect(self):
         print("LISTENER IS CONNECTED!")
@@ -133,7 +133,7 @@ class TweetCollector(StreamListener):
 
 if __name__ == "__main__":
 
-    print("COLLECTING TWEETS IN", APP_ENV.upper())
+    print("COLLECTING TWEETS TO", STORAGE_ENV.upper(), "STORAGE")
 
     listener = TweetCollector()
     print("LISTENER", type(listener))
