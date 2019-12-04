@@ -14,6 +14,8 @@ TOPICS_LIST = ["impeach", "impeachment"] # todo: dynamically compile list from c
 # NOTE: "impeachment" keywords don't trigger the "impeach" filter, so adding "impeachment" as well
 #TOPICS_LIST = ["impeach -filter:retweets"] # doesn't work
 
+BATCH_SIZE = int(os.getenv("BATCH_SIZE", default="20"))
+
 def is_collectable(status):
     return (status.lang == "en"
             #and status.user.verified
@@ -73,12 +75,12 @@ def parse_status(status):
 
 class TweetCollector(StreamListener):
 
-    def __init__(self):
+    def __init__(self, batch_size=BATCH_SIZE):
         self.api = twitter_api()
         self.auth = self.api.auth
         self.counter = 0
         self.bq_service = BigQueryService()
-        self.batch_size = 20
+        self.batch_size = batch_size
         self.batch = []
 
     def collect(self, tweet):

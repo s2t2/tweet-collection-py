@@ -43,10 +43,18 @@ Finally set the `FROM_EMAIL` and `TO_EMAILS` environment variables to designate 
 
 ## Usage
 
+Test the storage service:
+
+```sh
+python -m app.storage_service
+```
+
 Run the tweet collector:
 
 ```sh
 python -m app.tweet_collector
+
+# BATCH_SIZE=200 STORAGE_ENV="remote" python -m app.tweet_collector
 ```
 
 ## Testing
