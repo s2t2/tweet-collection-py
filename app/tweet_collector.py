@@ -5,7 +5,7 @@ from tweepy.streaming import StreamListener
 from tweepy import Stream
 from urllib3.exceptions import ProtocolError
 
-from app import STORAGE_ENV
+from app import APP_ENV, STORAGE_ENV
 from app.twitter_service import twitter_api
 from app.notification_service import send_email
 from app.storage_service import append_to_csv, BigQueryService
@@ -108,7 +108,8 @@ class TweetCollector(StreamListener):
             print("----------------")
             print(f"DETECTED AN INCOMING TWEET! ({self.counter} -- {status.id_str})")
             tweet = parse_status(status)
-            pprint(tweet)
+            if APP_ENV != "production":
+                pprint(tweet)
             self.collect(tweet)
 
     def on_connect(self):
