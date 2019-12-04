@@ -8,7 +8,7 @@ from urllib3.exceptions import ProtocolError
 from app import STORAGE_ENV
 from app.twitter_service import twitter_api
 from app.notification_service import send_email
-from app.storage_service import append_to_csv, append_to_bq
+from app.storage_service import append_to_csv, BigQueryService
 
 TOPICS_LIST = ["impeach", "impeachment"] # todo: dynamically compile list from comma-separated env var string like "topic1,topic2"
 # NOTE: "impeachment" keywords don't trigger the "impeach" filter, so adding "impeachment" as well
@@ -77,6 +77,25 @@ class TweetCollector(StreamListener):
         self.api = twitter_api()
         self.auth = self.api.auth
         self.counter = 0
+        self.bq_service = BigQueryService()
+        self.batch_size = 20
+        self.batch = []
+
+    def collect(self, tweet):
+        """
+        Moving this logic out of on_status in hopes of preventing ProtocolErrors
+        Storing in batches to reduce API calls, and in hopes of preventing ProtocolErrors
+        """
+        self.batch.append(tweet)
+
+        if len(self.batch) >= self.batch_size:
+            print("STORING BATCH OF", len(self.batch), "TWEETS...")
+            if STORAGE_ENV == "local":
+                append_to_csv(self.batch)
+            elif STORAGE_ENV == "remote":
+                self.bq_service.append_to_bq(self.batch)
+            print("CLEARING BATCH...")
+            self.batch = []
 
     def on_status(self, status):
         if is_collectable(status):
@@ -87,12 +106,7 @@ class TweetCollector(StreamListener):
             print(f"DETECTED AN INCOMING TWEET! ({self.counter} -- {status.id_str})")
             tweet = parse_status(status)
             pprint(tweet)
-
-            # CONSIDER APPENDING IN BATCHES INSTEAD...
-            if STORAGE_ENV == "local":
-                append_to_csv([tweet])
-            elif STORAGE_ENV == "remote":
-                append_to_bq([tweet])
+            self.collect(tweet)
 
     def on_connect(self):
         print("LISTENER IS CONNECTED!")

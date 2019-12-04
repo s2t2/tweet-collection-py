@@ -17,32 +17,30 @@ TWEETS_CSV_FILEPATH = os.path.join(DATA_DIR, "tweets.csv")
 COLUMNS = ["id_str", "full_text", "geo", "created_at", "user_id_str", "user_screen_name", "user_description", "user_location", "user_verified"]
 
 def append_to_csv(tweets, tweets_filepath=TWEETS_CSV_FILEPATH):
-    """Params:
-        tweets (list<dict>)
-    """
-    # consider validating the tweet is a dict with an attribute for each column
+    """Param: tweets (list<dict>)"""
     new_df = pandas.DataFrame(tweets, columns=COLUMNS)
     if os.path.isfile(tweets_filepath):
         new_df.to_csv(tweets_filepath, mode="a", header=False, index=False)
     else:
         new_df.to_csv(tweets_filepath, index=False)
 
-def bq_client():
-    return bigquery.Client()
+class BigQueryService():
+    def __init__(self):
+        self.client = bigquery.Client()
+        dataset_ref = self.client.dataset(BQ_DATASET_NAME)
+        table_ref = dataset_ref.table(BQ_TABLE_NAME)
+        self.table = self.client.get_table(table_ref) # an API call
 
-def append_to_bq(tweets):
-    rows_to_insert = [list(twt.values()) for twt in tweets]
-
-    client = bq_client()
-    dataset_ref = client.dataset(BQ_DATASET_NAME)
-    table_ref = dataset_ref.table(BQ_TABLE_NAME)
-    table = client.get_table(table_ref) # a call
-
-    errors = client.insert_rows(table, rows_to_insert)
-    return errors
+    def append_to_bq(self, tweets):
+        """Param: tweets (list<dict>)"""
+        rows_to_insert = [list(twt.values()) for twt in tweets]
+        errors = self.client.insert_rows(self.table, rows_to_insert)
+        return errors
 
 if __name__ == "__main__":
     print("STORAGE SERVICE...")
+
+    bq_service = BigQueryService()
 
     print("--------------------")
     print("ADDING A RECORD...")
@@ -57,12 +55,12 @@ if __name__ == "__main__":
         'user_location': '',
         'user_verified': False
     }
-    errors = append_to_bq([new_tweet])
+    errors = bq_service.append_to_bq([new_tweet])
     print("ERRORS:", errors)
 
     print("--------------------")
     print("FETCHING RECORDS...")
-    client = bq_client()
+    client = bq_service.client
     #print("BQ CLIENT", type(client)) #> <class 'google.cloud.bigquery.client.Client'>
     sql = f"""
         SELECT
