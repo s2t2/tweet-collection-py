@@ -88,7 +88,7 @@ class TweetCollector(StreamListener):
 
             # CONSIDER APPENDING IN BATCHES INSTEAD...
             if STORAGE_ENV == "local":
-                append_to_csv(tweet)
+                append_to_csv([tweet])
             elif STORAGE_ENV == "remote":
                 append_to_bq([tweet])
 
@@ -97,7 +97,7 @@ class TweetCollector(StreamListener):
 
     def on_exception(self, exception):
         # has encountered errors:
-        #  + urllib3.exceptions.ProtocolError
+        #  + urllib3.exceptions.ProtocolError: ('Connection broken: IncompleteRead(0 bytes read)'
         #  + urllib3.exceptions.ReadTimeoutError: HTTPSConnectionPool
         print("EXCEPTION:", type(exception))
         print(exception)

@@ -16,9 +16,12 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
 TWEETS_CSV_FILEPATH = os.path.join(DATA_DIR, "tweets.csv")
 COLUMNS = ["id_str", "full_text", "geo", "created_at", "user_id_str", "user_screen_name", "user_description", "user_location", "user_verified"]
 
-def append_to_csv(tweet, tweets_filepath=TWEETS_CSV_FILEPATH):
+def append_to_csv(tweets, tweets_filepath=TWEETS_CSV_FILEPATH):
+    """Params:
+        tweets (list<dict>)
+    """
     # consider validating the tweet is a dict with an attribute for each column
-    new_df = pandas.DataFrame([tweet], columns=COLUMNS)
+    new_df = pandas.DataFrame(tweets, columns=COLUMNS)
     if os.path.isfile(tweets_filepath):
         new_df.to_csv(tweets_filepath, mode="a", header=False, index=False)
     else:
@@ -37,7 +40,6 @@ def append_to_bq(tweets):
 
     errors = client.insert_rows(table, rows_to_insert)
     return errors
-
 
 if __name__ == "__main__":
     print("STORAGE SERVICE...")

@@ -24,13 +24,13 @@ def test_csv_collection():
     }
 
     # if the local files don't already exist:
-    append_to_csv(tweet, tweets_filepath=TWEETS_CSV_FILEPATH)
+    append_to_csv([tweet], tweets_filepath=TWEETS_CSV_FILEPATH)
     assert os.path.isfile(TWEETS_CSV_FILEPATH)
     tweets_df = pandas.read_csv(TWEETS_CSV_FILEPATH)
     assert len(tweets_df) == 1
 
     # if the local files already exist:
-    append_to_csv(tweet, tweets_filepath=TWEETS_CSV_FILEPATH)
+    append_to_csv([tweet], tweets_filepath=TWEETS_CSV_FILEPATH)
     tweets_df = pandas.read_csv(TWEETS_CSV_FILEPATH)
     assert len(tweets_df) == 2
 
