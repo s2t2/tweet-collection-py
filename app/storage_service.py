@@ -67,6 +67,7 @@ if __name__ == "__main__":
             id_str, full_text, geo, created_at,
             user_id_str, user_screen_name, user_description, user_location, user_verified
         FROM `{BQ_PROJECT_NAME}.{BQ_DATASET_NAME}.{BQ_TABLE_NAME}`
+        ORDER BY created_at DESC
         LIMIT 10
     """
     #print("SQL:", sql)
