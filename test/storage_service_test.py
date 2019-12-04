@@ -1,7 +1,7 @@
 import os
 import pandas
 
-from app.storage_service import append_to_csv, append_to_bq
+from app.storage_service import append_to_csv, BigQueryService
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 TWEETS_CSV_FILEPATH = os.path.join(DATA_DIR, "tweets.csv")
@@ -34,8 +34,11 @@ def test_csv_collection():
     tweets_df = pandas.read_csv(TWEETS_CSV_FILEPATH)
     assert len(tweets_df) == 2
 
-def test_bq_schema():
-    pass
+#print("BQ CLIENT", type(client)) #> <class 'google.cloud.bigquery.client.Client'>
+#print("RESULTS", type(results)) #>  <class 'google.cloud.bigquery.table.RowIterator'>
+#print("ROW", type(row)) #> <class 'google.cloud.bigquery.table.Row'>
 
-def test_bq_collection():
-    pass
+def test_bq_collection(mock_tweet):
+    bq_service = BigQueryService(table_name="tweets_test")
+    errors = bq_service.append_to_bq([mock_tweet])
+    assert errors == []

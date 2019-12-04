@@ -25,10 +25,10 @@ def append_to_csv(tweets, tweets_filepath=TWEETS_CSV_FILEPATH):
         new_df.to_csv(tweets_filepath, index=False)
 
 class BigQueryService():
-    def __init__(self):
+    def __init__(self, table_name=BQ_TABLE_NAME):
         self.client = bigquery.Client()
         dataset_ref = self.client.dataset(BQ_DATASET_NAME)
-        table_ref = dataset_ref.table(BQ_TABLE_NAME)
+        table_ref = dataset_ref.table(table_name)
         self.table = self.client.get_table(table_ref) # an API call
 
     def append_to_bq(self, tweets):
@@ -37,46 +37,33 @@ class BigQueryService():
         errors = self.client.insert_rows(self.table, rows_to_insert)
         return errors
 
+    def execute_query(self, sql):
+        """Param: sql (str)"""
+        job = self.client.query(sql)
+        return job.result()
+
 if __name__ == "__main__":
     print("STORAGE SERVICE...")
 
     bq_service = BigQueryService()
 
-    #print("--------------------")
-    #print("ADDING A RECORD...")
-    #new_tweet = {
-    #    'id_str': '12345',
-    #    'full_text': 'Inserting a row',
-    #    'geo': None,
-    #    'created_at': '2019-12-02 01:13:49',
-    #    'user_id_str': '98776655443',
-    #    'user_screen_name': 'user123',
-    #    'user_description': 'Testing the storage service',
-    #    'user_location': '',
-    #    'user_verified': False
-    #}
-    #errors = bq_service.append_to_bq([new_tweet])
-    #print("ERRORS:", errors)
+    print("--------------------")
+    print("COUNTING RECORDS...")
+    sql = f"SELECT count(distinct id_str) as tweets_count FROM `{BQ_PROJECT_NAME}.{BQ_DATASET_NAME}.{BQ_TABLE_NAME}`"
+    results = bq_service.execute_query(sql)
+    print(list(results)[0].tweets_count)
 
     print("--------------------")
-    print("FETCHING RECORDS...")
-    client = bq_service.client
-    #print("BQ CLIENT", type(client)) #> <class 'google.cloud.bigquery.client.Client'>
+    print("FETCHING LATEST RECORDS...")
     sql = f"""
         SELECT
             id_str, full_text, geo, created_at,
             user_id_str, user_screen_name, user_description, user_location, user_verified
         FROM `{BQ_PROJECT_NAME}.{BQ_DATASET_NAME}.{BQ_TABLE_NAME}`
         ORDER BY created_at DESC
-        LIMIT 10
+        LIMIT 3
     """
-    #print("SQL:", sql)
-    job = client.query(sql)
-    #print("JOB", type(job))
-    results = job.result()
-    #print("RESULTS", type(results)) #>  <class 'google.cloud.bigquery.table.RowIterator'>
-    print("NUM ROWS:", results.total_rows)
+    results = bq_service.execute_query(sql)
     for row in results:
-        #print("ROW", type(row)) #> <class 'google.cloud.bigquery.table.Row'>
         print(row)
         print("---")
