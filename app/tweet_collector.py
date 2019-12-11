@@ -2,6 +2,7 @@ import os
 from pprint import pprint
 from time import sleep
 
+from dotenv import load_dotenv
 from tweepy.streaming import StreamListener
 from tweepy import Stream
 from urllib3.exceptions import ProtocolError
@@ -11,12 +12,18 @@ from app.twitter_service import twitter_api
 from app.notification_service import send_email
 from app.storage_service import append_to_csv, BigQueryService
 
-TOPICS_LIST = ["impeach", "impeachment"] # todo: dynamically compile list from comma-separated env var string like "topic1,topic2"
+load_dotenv()
+
+#TOPICS_LIST = ["impeach", "impeachment"] # todo: dynamically compile list from comma-separated env var string like "topic1,topic2"
 # NOTE: "impeachment" keywords don't trigger the "impeach" filter, so adding "impeachment" as well
 #TOPICS_LIST = ["impeach -filter:retweets"] # doesn't work
+TOPICS = os.getenv("TOPICS", default="impeach, impeached, impeachment, #TrumpImpeachment, #ImpeachAndConvict, #ImpeachAndConvictTrump, #IGReport, #SenateHearing, #IGHearing")
 
 BATCH_SIZE = int(os.getenv("BATCH_SIZE", default="20")) # coerces to int
 WILL_NOTIFY = (os.getenv("WILL_NOTIFY", default="False") == "True") # coerces to bool
+
+def topics_list(topics_csv_str=TOPICS):
+    return [topic.strip() for topic in topics_csv_str.split(",")]
 
 def is_collectable(status):
     return (status.lang == "en"
@@ -181,12 +188,13 @@ if __name__ == "__main__":
     stream = Stream(listener.auth, listener)
     print("STREAM", type(stream))
 
-    print("TOPICS:", TOPICS_LIST)
-    #stream.filter(track=TOPICS_LIST)
+    topics = topics_list()
+    print("TOPICS:", topics)
+    #stream.filter(track=topics)
     # handle ProtocolErrors...
     while True:
         try:
-            stream.filter(track=TOPICS_LIST)
+            stream.filter(track=topics)
         except ProtocolError:
             print("--------------------------------")
             print("RESTARTING AFTER PROTOCOL ERROR!")

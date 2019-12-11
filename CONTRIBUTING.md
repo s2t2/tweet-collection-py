@@ -21,6 +21,10 @@ pip install -r requirements.txt # (first time only)
 
 Create a ".env" file and set your environment variables there. See the ".env.example" file and instructions below for more details.
 
+### Custom Topics
+
+Set the `TOPICS` environment variable to customize the list of tweet keywords to filter.
+
 ### Google API Credentials
 
 To store tweets to a local CSV file, skip this section. Otherwise, to store tweets in Google Big Query, set the `STORAGE_ENV` environment variable to "remote" and continue...
