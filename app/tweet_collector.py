@@ -14,13 +14,13 @@ from app.storage_service import append_to_csv, BigQueryService
 
 load_dotenv()
 
-BATCH_SIZE = int(os.getenv("BATCH_SIZE", default="20")) # coerces to int
-WILL_NOTIFY = (os.getenv("WILL_NOTIFY", default="False") == "True") # coerces to bool
-
 #TOPICS_LIST = ["impeach", "impeachment"] # todo: dynamically compile list from comma-separated env var string like "topic1,topic2"
 # NOTE: "impeachment" keywords don't trigger the "impeach" filter, so adding "impeachment" as well
 #TOPICS_LIST = ["impeach -filter:retweets"] # doesn't work
-TOPICS = os.getenv("TOPICS", default="impeach, impeached, impeachment, #TrumpImpeachment, #ImpeachAndConvict, #ImpeachAndConvictTrump, #IGReport")
+TOPICS = os.getenv("TOPICS", default="impeach, impeached, impeachment, #TrumpImpeachment, #ImpeachAndConvict, #ImpeachAndConvictTrump, #IGReport, #SenateHearing, #IGHearing")
+
+BATCH_SIZE = int(os.getenv("BATCH_SIZE", default="20")) # coerces to int
+WILL_NOTIFY = (os.getenv("WILL_NOTIFY", default="False") == "True") # coerces to bool
 
 def topics_list(topics_csv_str=TOPICS):
     return [topic.strip() for topic in topics_csv_str.split(",")]
