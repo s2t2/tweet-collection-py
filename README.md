@@ -60,7 +60,7 @@ Within each dataset, create a table called "tweets", using the following table s
 
 ### Sendgrid API Credentials
 
-> If you don't care about sending notification emails, skip this section.
+> If you don't care about sending notification emails, skip this section. Otherwise set the `WILL_NOTIFY` environment variable to "True" and continue...
 
 [Sign up for a SendGrid account](https://signup.sendgrid.com/) and verify your account, as necessary. [Create an API Key](https://app.sendgrid.com/settings/api_keys) with "full access" permissions, and set it as the `SENDGRID_API_KEY` environment variable.
 
