@@ -100,7 +100,9 @@ Configure the rest of the environment variables:
 ```sh
 heroku config:set APP_ENV="production"
 heroku config:set STORAGE_ENV="remote"
-# etc...
+
+heroku config:set TOPICS="____, _____, ____"
+
 heroku config:set TWITTER_CONSUMER_KEY="____"
 heroku config:set TWITTER_CONSUMER_SECRET="____"
 heroku config:set TWITTER_ACCESS_TOKEN="____-____"
