@@ -70,7 +70,7 @@ def parse_string(my_str):
     try:
         my_str = my_str.replace("\n", " ")
         my_str = my_str.strip()
-    finally:
+    except AttributeError as err:
         pass
     return my_str
 
