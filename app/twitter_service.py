@@ -17,40 +17,58 @@ def twitter_api():
     return api
 
 def parse_status(status):
-    """Param status (tweepy.models.Status)"""
+    """
+    Param status (tweepy.models.Status)
+    Converts a nested status structure into a flat row of non-normalized status and user attributes
+    """
     user = status.user
+
+    retweet_of_status_id_str = None # TODO: parse status.retweeted_status
 
     row = {
         "status_id": status.id_str,
-        "status_text": remove_line_breaks(status.text)
+        "retweet_of_status_id": retweet_of_status_id_str,
+        "in_reply_to_status_id": status.in_reply_to_status_id_str,
+        "in_reply_to_user_id": status.in_reply_to_user_id_str,
+        #"is_quote_status": status.is_quote_status,
+
+        "text": parse_string(status.text),
+        "truncated": status.truncated,
         #"full_text": parse_full_text(status),
-        "status_geo": status.geo,
-        "status_created_at": timestamp(status.created_at),
+        "geo": status.geo,
+        #"retweet_count": status.retweet_count,
+        #"favorite_count": status.favorite_count,
+        "created_at": parse_timestamp(status.created_at),
 
         "user_id": user.id_str,
+        "user_name": user.name,
         "user_screen_name": user.screen_name,
-        "user_description": remove_line_breaks(user.description),
+        "user_description": parse_string(user.description),
         "user_location": user.location,
         "user_verified": user.verified,
+        "user_created_at": parse_timestamp(user.created_at),
     }
     return row
 
-def timestamp(my_dt):
+def parse_timestamp(my_dt):
     """
     Param my_dt (datetime.datetime) like status.created_at
     Converts datetime to string, formatted for Google BigQuery as YYYY-MM-DD HH:MM[:SS[.SSSSSS]]
     """
     return my_dt.strftime("%Y-%m-%d %H:%M:%S")
 
-def remove_line_breaks(my_str):
+def parse_string(my_str):
     """
-    Removes line-breaks for cleaner storage
     Param my_str (str)
+    Removes line-breaks for cleaner CSV storage
+    Handles string or null value
+    Returns string or null value
     """
-    description = user_attrs["description"]
-    # handle null user descriptions
-    if my_str:
-        my_str = my_str.replace("\n"," ")
+    try:
+        my_str = my_str.replace("\n", " ")
+        my_str = my_str.strip()
+    finally:
+        pass
     return my_str
 
 def parse_full_text(status):

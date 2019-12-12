@@ -8,7 +8,7 @@ from tweepy import Stream
 from urllib3.exceptions import ProtocolError
 
 from app import APP_ENV, STORAGE_ENV
-from app.twitter_service import twitter_api
+from app.twitter_service import twitter_api, parse_status
 from app.notification_service import send_email
 from app.storage_service import append_to_csv, BigQueryService
 
