@@ -21,20 +21,23 @@ def parse_status(status):
     Param status (tweepy.models.Status)
     Converts a nested status structure into a flat row of non-normalized status and user attributes
     """
-    user = status.user
 
-    retweet_of_status_id_str = None # TODO: parse status.retweeted_status
+    if hasattr(status, "retweeted_status"):
+        retweet_of_status_id_str = status.retweeted_status.id_str
+    else:
+        retweet_of_status_id_str = None # TODO: parse status.retweeted_status
+
+    user = status.user
 
     row = {
         "status_id": status.id_str,
-        "retweet_of_status_id": retweet_of_status_id_str,
-        "in_reply_to_status_id": status.in_reply_to_status_id_str,
-        "in_reply_to_user_id": status.in_reply_to_user_id_str,
-        #"is_quote_status": status.is_quote_status,
-
-        "text": parse_string(status.text),
+        "status_text": parse_string(status.text),
         "truncated": status.truncated,
-        #"full_text": parse_full_text(status),
+        #"full_text": parse_full_text(full_text),
+        "retweet_status_id": retweet_of_status_id_str,
+        "reply_status_id": status.in_reply_to_status_id_str,
+        "reply_user_id": status.in_reply_to_user_id_str,
+        "is_quote": status.is_quote_status,
         "geo": status.geo,
         #"retweet_count": status.retweet_count,
         #"favorite_count": status.favorite_count,
