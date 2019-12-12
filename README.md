@@ -31,17 +31,36 @@ Obtain credentials which provide access to the Twitter API. Set the environment 
 
 ### Google API Credentials
 
-To store tweets to a local CSV file, skip this section. Otherwise, to store tweets in Google Big Query, set the `STORAGE_ENV` environment variable to "remote" and continue...
-
-Login to the [Google Big Query console](https://console.cloud.google.com/bigquery), create a dataset called something like "impeachment" and set the `BQ_DATASET_NAME` environment variable accordingly. Within it, create a table called something like "tweets", and set the `BQ_TABLE_NAME` environment variable accordingly. Use the following table schema:
-
-    id_str:STRING,full_text:STRING,geo:STRING,created_at:TIMESTAMP,user_id_str:STRING,user_screen_name:STRING,user_description:STRING,user_location:STRING,user_verified:BOOLEAN
+To store tweets to a local CSV file, skip this section. Otherwise, to store tweets in Google BigQuery, set the `STORAGE_ENV` environment variable to "remote" and continue...
 
 From the Google Cloud console, enable the BigQuery API, then generate and download the corresponding service account credentials (for example into the root directory of this repo as "credentials.json") and set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable accordingly.
 
+#### Google BigQuery Setup
+
+Login to the [Google BigQuery console](https://console.cloud.google.com/bigquery), create three datasets named "impeachment_production", "impeachment_development", and "impeachment_test". If you choose a different dataset name stem besides "impeachment" then set the `APP_NAME` env var accordingly.
+
+Within each dataset, create a table called "tweets", using the following table schema:
+
+    status_id:STRING,
+    status_text:STRING,
+    truncated:BOOLEAN,
+    retweet_status_id:STRING,
+    reply_status_id:STRING,
+    reply_user_id:STRING,
+    is_quote:BOOLEAN,
+    geo:STRING,
+    created_at:TIMESTAMP,
+    user_id:STRING,
+    user_name:STRING,
+    user_screen_name:STRING,
+    user_description:STRING,
+    user_location:STRING,
+    user_verified:BOOLEAN,
+    user_created_at:TIMESTAMP
+
 ### Sendgrid API Credentials
 
-[Sign up for a SendGrid account](https://signup.sendgrid.com/) and verify your account, as necessary. [Create an API Key](https://app.sendgrid.com/settings/api_keys) with "full access" permissions, and set it as the  `SENDGRID_API_KEY` environment variable.
+[Sign up for a SendGrid account](https://signup.sendgrid.com/) and verify your account, as necessary. [Create an API Key](https://app.sendgrid.com/settings/api_keys) with "full access" permissions, and set it as the `SENDGRID_API_KEY` environment variable.
 
 Finally set the `FROM_EMAIL` and `TO_EMAILS` environment variables to designate sender and recipients of error notification emails.
 

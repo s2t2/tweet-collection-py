@@ -3,33 +3,42 @@ from dotenv import load_dotenv
 from google.cloud import bigquery
 import pandas
 
-from app import APP_ENV
+from app import APP_NAME, APP_ENV, tweet_attributes, retweet_attributes
 
 load_dotenv()
 
-GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS") # implicit check by google.cloud (and keras)
-BQ_PROJECT_NAME = os.getenv("BQ_PROJECT_NAME", default="my-project")
-BQ_DATASET_NAME = os.getenv("BQ_DATASET_NAME", default="my_dataset")
-BQ_TABLE_NAME = os.getenv("BQ_TABLE_NAME", default="my_table")
-
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
 TWEETS_CSV_FILEPATH = os.path.join(DATA_DIR, "tweets.csv")
-COLUMNS = ["id_str", "full_text", "geo", "created_at", "user_id_str", "user_screen_name", "user_description", "user_location", "user_verified"]
+
+GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS") # implicit check by google.cloud (and keras)
+BQ_PROJECT_NAME = os.getenv("BQ_PROJECT_NAME", default="tweet-collector-py")
+BQ_DATASET_NAME = os.getenv("BQ_DATASET_NAME", default=f"{APP_NAME}_{APP_ENV}") #> "impeachment_production"
+BQ_TABLE_NAME = os.getenv("BQ_TABLE_NAME", default="tweets")
 
 def append_to_csv(tweets, tweets_filepath=TWEETS_CSV_FILEPATH):
     """Param: tweets (list<dict>)"""
-    new_df = pandas.DataFrame(tweets, columns=COLUMNS)
+    column_names = [
+        'status_id', 'status_text', 'truncated', 'retweet_status_id', 'reply_status_id', 'reply_user_id', 'is_quote', 'geo', 'created_at',
+        'user_id', 'user_name', 'user_screen_name', 'user_description', 'user_location', 'user_verified', 'user_created_at'
+    ]
+    #column_names = list(tweets[0].keys())
+    #print("COLUMN NAMES", column_names)
+    new_df = pandas.DataFrame(tweets, columns=column_names)
     if os.path.isfile(tweets_filepath):
         new_df.to_csv(tweets_filepath, mode="a", header=False, index=False)
     else:
         new_df.to_csv(tweets_filepath, index=False)
 
 class BigQueryService():
-    def __init__(self, table_name=BQ_TABLE_NAME):
+    def __init__(self, project_name=BQ_PROJECT_NAME, dataset_name=BQ_DATASET_NAME, table_name=BQ_TABLE_NAME):
+        self.project_name = project_name
+        self.dataset_name = dataset_name #> "impeachment_production", "impeachment_test", etc.
+        self.table_name = table_name
+        self.table_address = f"{self.project_name}.{self.dataset_name}.{self.table_name}"
         self.client = bigquery.Client()
-        dataset_ref = self.client.dataset(BQ_DATASET_NAME)
-        table_ref = dataset_ref.table(table_name)
-        self.table = self.client.get_table(table_ref) # an API call
+        dataset_ref = self.client.dataset(self.dataset_name)
+        table_ref = dataset_ref.table(self.table_name)
+        self.table = self.client.get_table(table_ref) # an API call (caches results for subsequent inserts)
 
     def append_to_bq(self, tweets):
         """Param: tweets (list<dict>)"""
@@ -43,13 +52,19 @@ class BigQueryService():
         return job.result()
 
 if __name__ == "__main__":
-    print("STORAGE SERVICE...")
 
+    print("BIGQUERY SERVICE...")
     bq_service = BigQueryService()
+    print("TABLE ADDRESS:", bq_service.table_address.upper())
+
+    print("--------------------")
+    print("INSERTING RECORDS...")
+    errors = bq_service.append_to_bq([tweet_attributes, retweet_attributes])
+    print("ERRORS:", errors)
 
     print("--------------------")
     print("COUNTING RECORDS...")
-    sql = f"SELECT count(distinct id_str) as tweets_count FROM `{BQ_PROJECT_NAME}.{BQ_DATASET_NAME}.{BQ_TABLE_NAME}`"
+    sql = f"SELECT count(distinct status_id) as tweets_count FROM `{bq_service.table_address}`"
     results = bq_service.execute_query(sql)
     print(list(results)[0].tweets_count)
 
@@ -57,9 +72,9 @@ if __name__ == "__main__":
     print("FETCHING LATEST RECORDS...")
     sql = f"""
         SELECT
-            id_str, full_text, geo, created_at,
-            user_id_str, user_screen_name, user_description, user_location, user_verified
-        FROM `{BQ_PROJECT_NAME}.{BQ_DATASET_NAME}.{BQ_TABLE_NAME}`
+            status_id, status_text, geo, created_at,
+            user_id, user_screen_name, user_description, user_location, user_verified
+        FROM `{bq_service.table_address}`
         ORDER BY created_at DESC
         LIMIT 3
     """

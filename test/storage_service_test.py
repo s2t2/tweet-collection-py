@@ -26,6 +26,6 @@ def test_csv_collection(parsed_tweet, parsed_retweet):
 #print("ROW", type(row)) #> <class 'google.cloud.bigquery.table.Row'>
 
 def test_bq_collection(parsed_tweet, parsed_retweet):
-    bq_service = BigQueryService(table_name="tweets_test")
+    bq_service = BigQueryService(dataset_name="impeachment_test", table_name="tweets")
     errors = bq_service.append_to_bq([parsed_tweet, parsed_retweet])
     assert errors == []
