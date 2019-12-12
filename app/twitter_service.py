@@ -69,6 +69,7 @@ def parse_string(my_str):
     """
     try:
         my_str = my_str.replace("\n", " ")
+        my_str = my_str.replace("\r", " ")
         my_str = my_str.strip()
     except AttributeError as err:
         pass

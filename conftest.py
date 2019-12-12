@@ -28,6 +28,14 @@ def retweet_ext(twitter_api):
     """extended mode gets more data than the listener's on_status method"""
     return twitter_api.get_status(1201341021432365056, tweet_mode="extended")
 
+#@pytest.fixture(scope="module")
+#def tweet_with_weird_user_description_1(twitter_api):
+#    return twitter_api.get_status(1205017687216336896)
+#
+#@pytest.fixture(scope="module")
+#def tweet_with_weird_user_description_2(twitter_api):
+#    return twitter_api.get_status(1205017997162606594)
+
 @pytest.fixture()
 def parsed_tweet():
     return tweet_attributes
