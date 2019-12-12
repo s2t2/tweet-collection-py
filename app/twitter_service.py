@@ -16,6 +16,87 @@ def twitter_api():
     api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
     return api
 
+def parse_status(status):
+    """
+    Param status (tweepy.models.Status)
+    Converts a nested status structure into a flat row of non-normalized status and user attributes
+    """
+
+    if hasattr(status, "retweeted_status"):
+        retweet_of_status_id_str = status.retweeted_status.id_str
+    else:
+        retweet_of_status_id_str = None
+
+    user = status.user
+
+    row = {
+        "status_id": status.id_str,
+        "status_text": parse_string(status.text),
+        "truncated": status.truncated,
+        #"full_text": parse_full_text(full_text),
+        "retweet_status_id": retweet_of_status_id_str,
+        "reply_status_id": status.in_reply_to_status_id_str,
+        "reply_user_id": status.in_reply_to_user_id_str,
+        "is_quote": status.is_quote_status,
+        "geo": status.geo,
+        #"retweet_count": status.retweet_count,
+        #"favorite_count": status.favorite_count,
+        "created_at": parse_timestamp(status.created_at),
+
+        "user_id": user.id_str,
+        "user_name": user.name,
+        "user_screen_name": user.screen_name,
+        "user_description": parse_string(user.description),
+        "user_location": user.location,
+        "user_verified": user.verified,
+        "user_created_at": parse_timestamp(user.created_at),
+    }
+    return row
+
+def parse_timestamp(my_dt):
+    """
+    Param my_dt (datetime.datetime) like status.created_at
+    Converts datetime to string, formatted for Google BigQuery as YYYY-MM-DD HH:MM[:SS[.SSSSSS]]
+    """
+    return my_dt.strftime("%Y-%m-%d %H:%M:%S")
+
+def parse_string(my_str):
+    """
+    Param my_str (str)
+    Removes line-breaks for cleaner CSV storage
+    Handles string or null value
+    Returns string or null value
+    """
+    try:
+        my_str = my_str.replace("\n", " ")
+        my_str = my_str.replace("\r", " ")
+        my_str = my_str.strip()
+    except AttributeError as err:
+        pass
+    return my_str
+
+def parse_full_text(status):
+    """Param status (tweepy.models.Status)"""
+    # GET FULL TEXT (THIS SHOULD BE EASIER)
+    # h/t: https://github.com/tweepy/tweepy/issues/974#issuecomment-383846209
+
+    if hasattr(status, "retweeted_status"):
+        sts = status.retweeted_status
+    else:
+        sts = status
+
+    if hasattr(sts, "full_text"):
+        full_text = sts.full_text
+    elif hasattr(sts, "extended_tweet"):
+        full_text = sts.extended_tweet["full_text"]
+    else:
+        full_text = sts.text
+
+    full_text = full_text.replace("\n"," ") # remove line breaks for cleaner storage
+    #print(status.id_str, status.user.screen_name.upper(), "says:", full_text)
+
+    return full_text
+
 if __name__ == "__main__":
     api = twitter_api()
     print("API", type(api))

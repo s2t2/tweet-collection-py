@@ -1,19 +1,18 @@
-status = {
+tweet_attributes = {
     'created_at': 'Mon Dec 02 01:13:49 +0000 2019',
     'id': 1201308452850675712,
     'id_str': '1201308452850675712',
-    'full_text': 'There’s zero chance that 20 Republican senators have enough integrity to remove Trump from office. \n\nBut there are still 3 reasons to impeach him. A failure by Congress to respond to these abuses would effectively render the constitution meaningless.\nhttps://t.co/y60SDLGekb',
-    'truncated': False,
-    'display_text_range': [0, 274],
+    'text': 'There’s zero chance that 20 Republican senators have enough integrity to remove Trump from office. \n\nBut there are… https://t.co/uHrShOKq8f',
+    'truncated': True,
     'entities': {
         'hashtags': [],
         'symbols': [],
         'user_mentions': [],
         'urls': [{
-            'url': 'https://t.co/y60SDLGekb',
-            'expanded_url': 'https://www.theguardian.com/commentisfree/2019/nov/30/trump-impeachment-inquiry-removal',
-            'display_url': 'theguardian.com/commentisfree/…',
-            'indices': [251, 274]
+            'url': 'https://t.co/uHrShOKq8f',
+            'expanded_url': 'https://twitter.com/i/web/status/1201308452850675712',
+            'display_url': 'twitter.com/i/web/status/1…',
+            'indices': [116, 139]
         }]
     },
     'source': '<a href="http://twitter.com/download/iphone" rel="nofollow">Twitter for iPhone</a>',
@@ -22,18 +21,6 @@ status = {
     'in_reply_to_user_id': None,
     'in_reply_to_user_id_str': None,
     'in_reply_to_screen_name': None,
-    'geo': None,
-    'coordinates': None,
-    'place': None,
-    'contributors': None,
-    'is_quote_status': False,
-    'retweet_count': 1029,
-    'favorite_count': 3023,
-    'favorited': False,
-    'retweeted': False,
-    'possibly_sensitive': False,
-    'possibly_sensitive_appealable': False,
-    'lang': 'en',
     'user': {
         'id': 148529707,
         'id_str': '148529707',
@@ -43,25 +30,27 @@ status = {
         'description': 'Berkeley prof, former Sec. of Lab. @InequalityMedia. Movies "Saving Capitalism" & "Inequality for All" on Netflix. Books: The Common Good, Saving Capitalism,etc',
         'url': 'https://t.co/0EU7G9TAXa',
         'entities': {
-            'url': {'urls': [{
-                'url': 'https://t.co/0EU7G9TAXa',
-                'expanded_url': 'https://www.inequalitymedia.org/get-updates',
-                'display_url': 'inequalitymedia.org/get-updates',
-                'indices': [0, 23]
-            }]},
+            'url': {
+                'urls': [{
+                    'url': 'https://t.co/0EU7G9TAXa',
+                    'expanded_url': 'https://www.inequalitymedia.org/get-updates',
+                    'display_url': 'inequalitymedia.org/get-updates',
+                    'indices': [0, 23]}
+                ]
+            },
             'description': {'urls': []}
         },
         'protected': False,
-        'followers_count': 735670,
-        'friends_count': 304,
-        'listed_count': 11170,
+        'followers_count': 739919,
+        'friends_count': 308,
+        'listed_count': 11185,
         'created_at': 'Wed May 26 23:17:10 +0000 2010',
-        'favourites_count': 2575,
+        'favourites_count': 2647,
         'utc_offset': None,
         'time_zone': None,
         'geo_enabled': True,
         'verified': True,
-        'statuses_count': 11334,
+        'statuses_count': 11402,
         'lang': None,
         'contributors_enabled': False,
         'is_translator': False,
@@ -87,5 +76,17 @@ status = {
         'follow_request_sent': False,
         'notifications': False,
         'translator_type': 'none'
-    }
+    },
+    'geo': None,
+    'coordinates': None,
+    'place': None,
+    'contributors': None,
+    'is_quote_status': False,
+    'retweet_count': 2375,
+    'favorite_count': 6634,
+    'favorited': False,
+    'retweeted': False,
+    'possibly_sensitive': False,
+    'possibly_sensitive_appealable': False,
+    'lang': 'en'
 }
