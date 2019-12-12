@@ -25,7 +25,7 @@ def parse_status(status):
     if hasattr(status, "retweeted_status"):
         retweet_of_status_id_str = status.retweeted_status.id_str
     else:
-        retweet_of_status_id_str = None # TODO: parse status.retweeted_status
+        retweet_of_status_id_str = None
 
     user = status.user
 
