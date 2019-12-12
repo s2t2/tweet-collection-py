@@ -31,7 +31,7 @@ Obtain credentials which provide access to the Twitter API. Set the environment 
 
 ### Google API Credentials
 
-To store tweets to a local CSV file, skip this section. Otherwise, to store tweets in Google BigQuery, set the `STORAGE_ENV` environment variable to "remote" and continue...
+> To store tweets to a local CSV file, skip this section. Otherwise, to store tweets in Google BigQuery, set the `STORAGE_ENV` environment variable to "remote" and continue...
 
 From the Google Cloud console, enable the BigQuery API, then generate and download the corresponding service account credentials (for example into the root directory of this repo as "credentials.json") and set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable accordingly.
 
@@ -60,6 +60,8 @@ Within each dataset, create a table called "tweets", using the following table s
 
 ### Sendgrid API Credentials
 
+> If you don't care about sending notification emails, skip this section.
+
 [Sign up for a SendGrid account](https://signup.sendgrid.com/) and verify your account, as necessary. [Create an API Key](https://app.sendgrid.com/settings/api_keys) with "full access" permissions, and set it as the `SENDGRID_API_KEY` environment variable.
 
 Finally set the `FROM_EMAIL` and `TO_EMAILS` environment variables to designate sender and recipients of error notification emails.
@@ -76,8 +78,9 @@ Run the tweet collector:
 
 ```sh
 python -m app.tweet_collector
-# ... or with env var customizations like...
+# ... OR ...
 BATCH_SIZE=200 STORAGE_ENV="remote" python -m app.tweet_collector
+# ... OR ...
 APP_ENV="production" STORAGE_ENV="remote" WILL_NOTIFY=True python -m app.tweet_collector
 ```
 
