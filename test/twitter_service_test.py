@@ -2,7 +2,7 @@ from tweepy.auth import OAuthHandler
 from tweepy.api import API
 from tweepy.models import Status
 
-from app.twitter_service import twitter_api, parse_status, parse_string, parse_timestamp
+from app.twitter_service import twitter_api, parse_status, parse_full_text, parse_string, parse_timestamp
 from conftest import parsed_tweet, parsed_retweet
 
 def test_twitter_api():
@@ -18,6 +18,10 @@ def test_get_status(tweet, retweet):
 def test_parse_status(tweet, retweet, parsed_tweet, parsed_retweet):
     assert parse_status(tweet) == parsed_tweet
     assert parse_status(retweet) == parsed_retweet
+
+def test_parse_full_text(tweet, tweet_ext):
+    assert parse_full_text(tweet) == 'There’s zero chance that 20 Republican senators have enough integrity to remove Trump from office. \n\nBut there are… https://t.co/uHrShOKq8f'
+    assert parse_full_text(tweet_ext) == 'There’s zero chance that 20 Republican senators have enough integrity to remove Trump from office. \n\nBut there are still 3 reasons to impeach him. A failure by Congress to respond to these abuses would effectively render the constitution meaningless.\nhttps://t.co/y60SDLGekb'
 
 #def test_parse_string(tweet_with_weird_user_description_1, tweet_with_weird_user_description_2):
 def test_parse_string():

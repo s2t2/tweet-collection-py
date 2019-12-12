@@ -31,9 +31,8 @@ def parse_status(status):
 
     row = {
         "status_id": status.id_str,
-        "status_text": parse_string(status.text),
+        "status_text": parse_string(parse_full_text(status)),
         "truncated": status.truncated,
-        #"full_text": parse_full_text(full_text),
         "retweet_status_id": retweet_of_status_id_str,
         "reply_status_id": status.in_reply_to_status_id_str,
         "reply_user_id": status.in_reply_to_user_id_str,
@@ -79,20 +78,18 @@ def parse_full_text(status):
     """Param status (tweepy.models.Status)"""
     # GET FULL TEXT (THIS SHOULD BE EASIER)
     # h/t: https://github.com/tweepy/tweepy/issues/974#issuecomment-383846209
+    #
+    # commenting this out because we're storing the id of the retweeted_status
+    #if hasattr(status, "retweeted_status"):
+    #    status = status.retweeted_status
 
-    if hasattr(status, "retweeted_status"):
-        sts = status.retweeted_status
+    if hasattr(status, "full_text"):
+        full_text = status.full_text
+    elif hasattr(status, "extended_tweet"):
+        full_text = status.extended_tweet["full_text"]
     else:
-        sts = status
+        full_text = status.text
 
-    if hasattr(sts, "full_text"):
-        full_text = sts.full_text
-    elif hasattr(sts, "extended_tweet"):
-        full_text = sts.extended_tweet["full_text"]
-    else:
-        full_text = sts.text
-
-    full_text = full_text.replace("\n"," ") # remove line breaks for cleaner storage
     #print(status.id_str, status.user.screen_name.upper(), "says:", full_text)
 
     return full_text
@@ -105,4 +102,6 @@ if __name__ == "__main__":
     print("STATUS", type(status))
     pprint(status._json)
 
-    #breakpoint()
+
+    # breakpoint()
+    # parse_full_text(status)
