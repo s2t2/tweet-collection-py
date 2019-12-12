@@ -8,16 +8,13 @@ def test_backoff_strategy():
     assert backoff_strategy(7) == 64
 
 def test_is_collectable(tweet, retweet):
+    breakpoint()
     assert is_collectable(tweet) == True
     assert is_collectable(retweet) == True
 
-def test_parse_timestamp(tweet, tweet_ext, retweet, retweet_ext):
-    # BQ says... Required format is YYYY-MM-DD HH:MM[:SS[.SSSSSS]];
-    breakpoint()
+def test_parse_timestamp(tweet, retweet):
     assert parse_timestamp(tweet) == "2019-12-02 04:29:13"
-    assert parse_timestamp(tweet_ext) == "2019-12-02 04:29:13"
     assert parse_timestamp(retweet) == "2019-12-02 04:29:13"
-    assert parse_timestamp(retweet_ext) == "2019-12-02 04:29:13"
 
 def test_parsing_methods(tweet, tweet_ext, retweet, retweet_ext):
 

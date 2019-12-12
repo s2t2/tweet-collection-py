@@ -14,26 +14,17 @@ def twitter_api():
 @pytest.fixture(scope="module")
 def tweet(twitter_api):
     """mimics the data returned by the listener's on_status() method"""
-    status = twitter_api.get_status(1201308452850675712)
-    print("TWEET:")
-    print(status._json)
-    return status
+    return twitter_api.get_status(1201308452850675712)
 
 @pytest.fixture(scope="module")
 def tweet_ext(twitter_api):
     """extended mode gets more data than the listener's on_status method"""
-    status = twitter_api.get_status(1201308452850675712, tweet_mode="extended")
-    print("TWEET EXT:")
-    print(status._json)
-    return status
+    return twitter_api.get_status(1201308452850675712, tweet_mode="extended")
 
 @pytest.fixture(scope="module")
 def retweet(twitter_api):
     """mimics the data returned by the listener's on_status() method"""
-    status = twitter_api.get_status(1201341021432365056)
-    print("TWEET EXT:")
-    print(status._json)
-    return status
+    return twitter_api.get_status(1201341021432365056)
 
 @pytest.fixture(scope="module")
 def retweet_ext(twitter_api):
@@ -45,7 +36,7 @@ def retweet_ext(twitter_api):
 #
 
 @pytest.fixture()
-def collected_tweet_attributes():
+def parsed_tweet():
     return {
         'id_str': '12345',
         'full_text': 'My collected tweet',
