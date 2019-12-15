@@ -1,7 +1,12 @@
 
 import pytest
 
+from app.tweet_collector import TweetCollector
 from app.twitter_service import twitter_api as api
+
+@pytest.fixture(scope="module")
+def listener():
+    return TweetCollector()
 
 @pytest.fixture(scope="module")
 def twitter_api():
@@ -35,13 +40,13 @@ def retweet_ext(twitter_api):
 #def tweet_with_weird_user_description_2(twitter_api):
 #    return twitter_api.get_status(1205017997162606594)
 
-@pytest.fixture()
-def parsed_tweet():
-    return tweet_attributes
+@pytest.fixture(scope="module")
+def admin_add_topic_tweet(twitter_api):
+    return twitter_api.get_status(1205337492695728133)
 
-@pytest.fixture()
-def parsed_retweet():
-    return retweet_attributes
+#
+# MOCKS
+#
 
 tweet_attributes = {
     'status_id': '1201308452850675712',
@@ -80,3 +85,11 @@ retweet_attributes = {
     'user_verified': False,
     'user_created_at': '2019-10-28 23:00:46'
 }
+
+@pytest.fixture()
+def parsed_tweet():
+    return tweet_attributes
+
+@pytest.fixture()
+def parsed_retweet():
+    return retweet_attributes

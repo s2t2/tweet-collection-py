@@ -14,8 +14,6 @@ from app.storage_service import append_to_csv, BigQueryService
 
 load_dotenv()
 
-TWITTER_HANDLE = os.getenv("TWITTER_HANDLE")
-
 #TOPICS_LIST = ["impeach", "impeachment"] # todo: dynamically compile list from comma-separated env var string like "topic1,topic2"
 # NOTE: "impeachment" keywords don't trigger the "impeach" filter, so adding "impeachment" as well
 #TOPICS_LIST = ["impeach -filter:retweets"] # doesn't work
@@ -24,24 +22,22 @@ TOPICS = os.getenv("TOPICS", default="impeach, impeached, impeachment, #TrumpImp
 BATCH_SIZE = int(os.getenv("BATCH_SIZE", default="20")) # coerces to int
 WILL_NOTIFY = (os.getenv("WILL_NOTIFY", default="False") == "True") # coerces to bool
 
-def topics_list(topics_csv_str=TOPICS):
-    topics = [topic.strip() for topic in topics_csv_str.split(",")]
+TWITTER_HANDLE = os.getenv("TWITTER_HANDLE")
+ADMIN_HANDLES = os.getenv("ADMIN_HANDLES")
+
+def parse_topics(csv_str=TOPICS):
+    topics = [topic.strip() for topic in csv_str.split(",")]
     if TWITTER_HANDLE:
         print("TRACKING TWITTER HANDLE", TWITTER_HANDLE)
         topics.append(TWITTER_HANDLE) # track the app's handle, so we can respond to mentions
     return topics
 
-def is_collectable(status):
-    """Param status (tweepy.models.Status)"""
-    return (status.lang == "en"
-            #and status.user.verified
-            #and status.in_reply_to_status_id == None
-            #and status.in_reply_to_user_id == None
-            #and status.in_reply_to_screen_name == None
-            #and status.is_quote_status == False
-            #and status.retweeted == False
-            #and not hasattr(status, "retweeted_status")
-    )
+def parse_admin_handles(csv_str=ADMIN_HANDLES):
+    if csv_str:
+        admin_handles = [handle.strip() for handle in csv_str.split(",")]
+    else:
+        admin_handles = []
+    return admin_handles
 
 def backoff_strategy(i):
     """
@@ -60,6 +56,64 @@ class TweetCollector(StreamListener):
         self.batch_size = batch_size
         self.batch = []
         self.will_notify = (will_notify == True)
+        self.topics = parse_topics()
+        self.dev_handle = TWITTER_HANDLE
+        self.admin_handles = parse_admin_handles()
+
+    def on_status(self, status):
+        """Param status (tweepy.models.Status)"""
+        if self.is_admin_request(status):
+            print("DETECTED AN ADMIN REQUEST!", status.id_str, status.text)
+            self.process_admin_request(status)
+        elif self.is_collectable(status):
+            self.counter +=1
+            ###if self.counter > 3: raise RuntimeError("OOPS")
+            print("----------------")
+            print(f"DETECTED AN INCOMING TWEET! ({self.counter} -- {status.id_str})")
+            self.collect_in_batches(status)
+
+    def is_admin_request(self, status):
+        """Param status (tweepy.models.Status)"""
+        return bool(self.dev_handle
+                and self.admin_handles
+                and self.dev_handle in status.text # sent to the dev account
+                and f"@{status.user.screen_name}" in self.admin_handles # sent from an admin
+        )
+
+    @property
+    def add_topic_command(self):
+        return f"{self.dev_handle} add topic "
+
+    def process_admin_request(self, status):
+        new_topic = self.parse_new_topic(status.text)
+        if new_topic:
+            # TODO: add the topic to the production topics datastore
+            print("NEW TOPIC!", new_topic)
+            breakpoint()
+
+    def parse_new_topic(self, status_text):
+        """Param status_text (str)"""
+        if self.add_topic_command in status_text:
+            parts = status_text.split(self.add_topic_command) #> ['', '#FactsMatter']
+            parts = [part for part in parts if part] #> ['#FactsMatter']
+            if len(parts) == 1:
+                return parts[0].strip()
+            else:
+                return None
+        else:
+            return None
+
+    def is_collectable(self, status):
+        """Param status (tweepy.models.Status)"""
+        return (status.lang == "en"
+                #and status.user.verified
+                #and status.in_reply_to_status_id == None
+                #and status.in_reply_to_user_id == None
+                #and status.in_reply_to_screen_name == None
+                #and status.is_quote_status == False
+                #and status.retweeted == False
+                #and not hasattr(status, "retweeted_status")
+        )
 
     def collect_in_batches(self, status):
         """
@@ -84,15 +138,6 @@ class TweetCollector(StreamListener):
             print("CLEARING BATCH AND COUNTER...")
             self.batch = []
             self.counter = 0
-
-    def on_status(self, status):
-        """Param status (tweepy.models.Status)"""
-        if is_collectable(status):
-            self.counter +=1
-            ###if self.counter > 3: raise RuntimeError("OOPS")
-            print("----------------")
-            print(f"DETECTED AN INCOMING TWEET! ({self.counter} -- {status.id_str})")
-            self.collect_in_batches(status)
 
     def on_connect(self):
         print("LISTENER IS CONNECTED!")
@@ -153,7 +198,7 @@ if __name__ == "__main__":
     stream = Stream(listener.auth, listener)
     print("STREAM", type(stream))
 
-    topics = topics_list()
+    topics = listener.topics
     print("TOPICS:", topics)
     #stream.filter(track=topics)
     # handle ProtocolErrors...

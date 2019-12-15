@@ -4,7 +4,6 @@ from google.cloud import bigquery
 import pandas
 
 from app import APP_NAME, APP_ENV
-from conftest import tweet_attributes, retweet_attributes
 
 load_dotenv()
 
@@ -53,6 +52,8 @@ class BigQueryService():
         return job.result()
 
 if __name__ == "__main__":
+
+    from conftest import tweet_attributes, retweet_attributes
 
     print("BIGQUERY SERVICE...")
     bq_service = BigQueryService()
