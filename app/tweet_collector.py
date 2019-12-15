@@ -14,6 +14,8 @@ from app.storage_service import append_to_csv, BigQueryService
 
 load_dotenv()
 
+TWITTER_HANDLE = os.getenv("TWITTER_HANDLE")
+
 #TOPICS_LIST = ["impeach", "impeachment"] # todo: dynamically compile list from comma-separated env var string like "topic1,topic2"
 # NOTE: "impeachment" keywords don't trigger the "impeach" filter, so adding "impeachment" as well
 #TOPICS_LIST = ["impeach -filter:retweets"] # doesn't work
@@ -23,7 +25,11 @@ BATCH_SIZE = int(os.getenv("BATCH_SIZE", default="20")) # coerces to int
 WILL_NOTIFY = (os.getenv("WILL_NOTIFY", default="False") == "True") # coerces to bool
 
 def topics_list(topics_csv_str=TOPICS):
-    return [topic.strip() for topic in topics_csv_str.split(",")]
+    topics = [topic.strip() for topic in topics_csv_str.split(",")]
+    if TWITTER_HANDLE:
+        print("TRACKING TWITTER HANDLE", TWITTER_HANDLE)
+        topics.append(TWITTER_HANDLE) # track the app's handle, so we can respond to mentions
+    return topics
 
 def is_collectable(status):
     """Param status (tweepy.models.Status)"""
