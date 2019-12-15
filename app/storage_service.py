@@ -31,19 +31,32 @@ def append_to_csv(tweets, tweets_filepath=TWEETS_CSV_FILEPATH):
 
 class BigQueryService():
     def __init__(self, project_name=BQ_PROJECT_NAME, dataset_name=BQ_DATASET_NAME, table_name=BQ_TABLE_NAME):
+        self.client = bigquery.Client()
         self.project_name = project_name
         self.dataset_name = dataset_name #> "impeachment_production", "impeachment_test", etc.
-        self.table_name = table_name
-        self.table_address = f"{self.project_name}.{self.dataset_name}.{self.table_name}"
-        self.client = bigquery.Client()
-        dataset_ref = self.client.dataset(self.dataset_name)
-        table_ref = dataset_ref.table(self.table_name)
-        self.table = self.client.get_table(table_ref) # an API call (caches results for subsequent inserts)
+        self.dataset_address = f"{self.project_name}.{self.dataset_name}"
+        self.dataset_ref = self.client.dataset(self.dataset_name)
+
+        self.tweets_table_name = "tweets"
+        self.tweets_table_address = f"{self.dataset_address}.{self.tweets_table_name}"
+        self.tweets_table_ref = self.dataset_ref.table(self.tweets_table_name)
+        self.tweets_table = self.client.get_table(self.tweets_table_ref) # an API call (caches results for subsequent inserts)
+
+        self.topics_table_name = "topics"
+        self.topics_table_address = f"{self.dataset_address}.{self.topics_table_name}"
+        self.topics_table_ref = self.dataset_ref.table(self.topics_table_name)
+        self.topics_table = self.client.get_table(self.topics_table_ref) # an API call (caches results for subsequent inserts)
 
     def append_tweets(self, tweets):
         """Param: tweets (list<dict>)"""
         rows_to_insert = [list(twt.values()) for twt in tweets]
-        errors = self.client.insert_rows(self.table, rows_to_insert)
+        errors = self.client.insert_rows(self.tweets_table, rows_to_insert)
+        return errors
+
+    def add_topic(self, new_topic):
+        """Param: topic (str)"""
+        rows_to_insert = [[new_topic]]
+        errors = self.client.insert_rows(self.topics_table, rows_to_insert)
         return errors
 
     def execute_query(self, sql):
@@ -57,30 +70,41 @@ if __name__ == "__main__":
 
     print("BIGQUERY SERVICE...")
     bq_service = BigQueryService()
-    print("TABLE ADDRESS:", bq_service.table_address.upper())
+    print("DATASET ADDRESS:", bq_service.dataset_address.upper())
 
     print("--------------------")
-    print("INSERTING RECORDS...")
+    print("INSERTING TWEETS...")
     print(tweet_attributes)
     print(retweet_attributes)
     errors = bq_service.append_tweets([tweet_attributes, retweet_attributes])
     print("ERRORS:", errors)
 
     print("--------------------")
-    print("COUNTING RECORDS...")
-    sql = f"SELECT count(distinct status_id) as tweets_count FROM `{bq_service.table_address}`"
+    print("COUNTING TWEETS...")
+    sql = f"SELECT count(distinct status_id) as tweets_count FROM `{bq_service.tweets_table_address}`"
     results = bq_service.execute_query(sql)
     print(list(results)[0].tweets_count)
 
     print("--------------------")
-    print("FETCHING LATEST RECORDS...")
+    print("FETCHING LATEST TWEETS...")
     sql = f"""
         SELECT
             status_id, status_text, geo, created_at,
             user_id, user_screen_name, user_description, user_location, user_verified
-        FROM `{bq_service.table_address}`
+        FROM `{bq_service.tweets_table_address}`
         ORDER BY created_at DESC
         LIMIT 3
+    """
+    results = bq_service.execute_query(sql)
+    for row in results:
+        print(row)
+        print("---")
+
+    print("--------------------")
+    print("FETCHING TOPICS...")
+    sql = f"""
+        SELECT topic, created_at
+        FROM `{bq_service.topics_table_address}`
     """
     results = bq_service.execute_query(sql)
     for row in results:
