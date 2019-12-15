@@ -6,7 +6,11 @@ from app.twitter_service import twitter_api as api
 
 @pytest.fixture(scope="module")
 def listener():
-    return TweetCollector()
+    return TweetCollector(dev_handle="@dev_account", admin_handles=["@admin1", "@admin2"], topics=['topic1', 'topic2', '#topic3', "#TopicFour"])
+
+#@pytest.fixture(scope="module")
+#def real_listener():
+#    return TweetCollector(dev_handle="@ImpeachmentTrak", admin_handles=["@prof_rossetti"], topics=["topic1", "topic2", "topic3"])
 
 @pytest.fixture(scope="module")
 def twitter_api():

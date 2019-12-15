@@ -39,16 +39,10 @@ def parse_admin_handles(csv_str=ADMIN_HANDLES):
         admin_handles = []
     return admin_handles
 
-def backoff_strategy(i):
-    """
-    Param: i (int) increasing rate limit number from the twitter api
-    Returns: number of seconds to sleep for
-    """
-    return (int(i) + 1) ** 2 # raise to the power of two
-
 class TweetCollector(StreamListener):
 
-    def __init__(self, batch_size=BATCH_SIZE, will_notify=WILL_NOTIFY):
+    def __init__(self, batch_size=BATCH_SIZE, will_notify=WILL_NOTIFY, topics=parse_topics(),
+                        dev_handle=TWITTER_HANDLE, admin_handles=parse_admin_handles()):
         self.api = twitter_api()
         self.auth = self.api.auth
         self.counter = 0
@@ -56,9 +50,9 @@ class TweetCollector(StreamListener):
         self.batch_size = batch_size
         self.batch = []
         self.will_notify = (will_notify == True)
-        self.topics = parse_topics()
-        self.dev_handle = TWITTER_HANDLE
-        self.admin_handles = parse_admin_handles()
+        self.topics = topics
+        self.dev_handle = dev_handle
+        self.admin_handles = admin_handles
 
     def on_status(self, status):
         """Param status (tweepy.models.Status)"""
@@ -80,16 +74,16 @@ class TweetCollector(StreamListener):
                 and f"@{status.user.screen_name}" in self.admin_handles # sent from an admin
         )
 
-    @property
-    def add_topic_command(self):
-        return f"{self.dev_handle} add topic "
-
     def process_admin_request(self, status):
         new_topic = self.parse_new_topic(status.text)
         if new_topic:
             # TODO: add the topic to the production topics datastore
             print("NEW TOPIC!", new_topic)
             breakpoint()
+
+    @property
+    def add_topic_command(self):
+        return f"{self.dev_handle} add topic "
 
     def parse_new_topic(self, status_text):
         """Param status_text (str)"""
@@ -103,7 +97,8 @@ class TweetCollector(StreamListener):
         else:
             return None
 
-    def is_collectable(self, status):
+    @staticmethod
+    def is_collectable(status):
         """Param status (tweepy.models.Status)"""
         return (status.lang == "en"
                 #and status.user.verified
@@ -165,9 +160,17 @@ class TweetCollector(StreamListener):
         if self.will_notify:
             contents = f"{type(track)}<br>{track}"
             send_email(subject="Tweet Collection - Rate Limit", contents=contents)
-        sleep_seconds = backoff_strategy(track)
+        sleep_seconds = self.backoff_strategy(track)
         print("SLEEPING FOR:", sleep_seconds, "SECONDS...")
         sleep(sleep_seconds)
+
+    @staticmethod
+    def backoff_strategy(i):
+        """
+        Param: i (int) increasing rate limit number from the twitter api
+        Returns: number of seconds to sleep for
+        """
+        return (int(i) + 1) ** 2 # raise to the power of two
 
     def on_timeout(self):
         print("TIMEOUT!")
