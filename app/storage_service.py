@@ -3,7 +3,8 @@ from dotenv import load_dotenv
 from google.cloud import bigquery
 import pandas
 
-from app import APP_NAME, APP_ENV, tweet_attributes, retweet_attributes
+from app import APP_NAME, APP_ENV
+from conftest import tweet_attributes, retweet_attributes
 
 load_dotenv()
 
@@ -59,6 +60,8 @@ if __name__ == "__main__":
 
     print("--------------------")
     print("INSERTING RECORDS...")
+    print(tweet_attributes)
+    print(retweet_attributes)
     errors = bq_service.append_to_bq([tweet_attributes, retweet_attributes])
     print("ERRORS:", errors)
 
