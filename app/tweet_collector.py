@@ -41,12 +41,12 @@ def parse_admin_handles(csv_str=ADMIN_HANDLES):
 
 class TweetCollector(StreamListener):
 
-    def __init__(self, batch_size=BATCH_SIZE, will_notify=WILL_NOTIFY, topics=parse_topics(),
-                        dev_handle=TWITTER_HANDLE, admin_handles=parse_admin_handles()):
+    def __init__(self, batch_size=BATCH_SIZE, will_notify=WILL_NOTIFY, bq_service=BigQueryService(),
+                        topics=parse_topics(), dev_handle=TWITTER_HANDLE, admin_handles=parse_admin_handles()):
         self.api = twitter_api()
         self.auth = self.api.auth
         self.counter = 0
-        self.bq_service = BigQueryService()
+        self.bq_service = bq_service
         self.batch_size = batch_size
         self.batch = []
         self.will_notify = (will_notify == True)
@@ -128,7 +128,7 @@ class TweetCollector(StreamListener):
             if STORAGE_ENV == "local":
                 append_to_csv(self.batch)
             elif STORAGE_ENV == "remote":
-                self.bq_service.append_to_bq(self.batch)
+                self.bq_service.append_tweets(self.batch)
 
             print("CLEARING BATCH AND COUNTER...")
             self.batch = []

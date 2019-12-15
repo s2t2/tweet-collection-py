@@ -1,16 +1,30 @@
 
 import pytest
 
-from app.tweet_collector import TweetCollector
 from app.twitter_service import twitter_api as api
+from app.storage_service import BigQueryService
+from app.tweet_collector import TweetCollector
+
+#
+# BIGQUERY API CALLS
+#
 
 @pytest.fixture(scope="module")
-def listener():
-    return TweetCollector(dev_handle="@dev_account", admin_handles=["@admin1", "@admin2"], topics=['topic1', 'topic2', '#topic3', "#TopicFour"])
+def bq_service():
+    return BigQueryService(dataset_name="impeachment_test")
 
-#@pytest.fixture(scope="module")
-#def real_listener():
-#    return TweetCollector(dev_handle="@ImpeachmentTrak", admin_handles=["@prof_rossetti"], topics=["topic1", "topic2", "topic3"])
+@pytest.fixture(scope="module")
+def listener(bq_service):
+    return TweetCollector(
+        bq_service=bq_service,
+        dev_handle="@dev_account",
+        admin_handles=["@admin1", "@admin2"],
+        topics=['topic1', 'topic2', '#topic3', "#TopicFour"]
+    )
+
+#
+# TWITTER API CALLS
+#
 
 @pytest.fixture(scope="module")
 def twitter_api():

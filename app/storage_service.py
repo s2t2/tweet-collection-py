@@ -40,7 +40,7 @@ class BigQueryService():
         table_ref = dataset_ref.table(self.table_name)
         self.table = self.client.get_table(table_ref) # an API call (caches results for subsequent inserts)
 
-    def append_to_bq(self, tweets):
+    def append_tweets(self, tweets):
         """Param: tweets (list<dict>)"""
         rows_to_insert = [list(twt.values()) for twt in tweets]
         errors = self.client.insert_rows(self.table, rows_to_insert)
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     print("INSERTING RECORDS...")
     print(tweet_attributes)
     print(retweet_attributes)
-    errors = bq_service.append_to_bq([tweet_attributes, retweet_attributes])
+    errors = bq_service.append_tweets([tweet_attributes, retweet_attributes])
     print("ERRORS:", errors)
 
     print("--------------------")
