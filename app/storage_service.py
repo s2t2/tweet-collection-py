@@ -10,14 +10,29 @@ from app.datetime_decorator import parse_timestamp
 load_dotenv()
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
-TWEETS_CSV_FILEPATH = os.path.join(DATA_DIR, "tweets.csv")
 TOPICS_CSV_FILEPATH = os.path.join(DATA_DIR, "topics.csv")
+TWEETS_CSV_FILEPATH = os.path.join(DATA_DIR, "tweets.csv")
 
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS") # implicit check by google.cloud (and keras)
 BQ_PROJECT_NAME = os.getenv("BQ_PROJECT_NAME", default="tweet-collector-py")
 BQ_DATASET_NAME = os.getenv("BQ_DATASET_NAME", default=f"{APP_NAME}_{APP_ENV}") #> "impeachment_production"
 
-def append_to_csv(tweets, tweets_filepath=TWEETS_CSV_FILEPATH):
+def topic_seeds(csv_filepath=TOPICS_CSV_FILEPATH):
+    """Returns a list of topic strings from the local topics CSV file"""
+    topics_df = pandas.read_csv(csv_filepath)
+    topics = topics_df["topic"].tolist()
+    return topics
+
+def append_topics_to_csv(topics, csv_filepath=TOPICS_CSV_FILEPATH):
+    """Param: topics (list<str>) like ['topic1', 'topic 2']"""
+    column_names = ['topic']
+    new_df = pandas.DataFrame(topics, columns=column_names)
+    if os.path.isfile(csv_filepath):
+        new_df.to_csv(csv_filepath, mode="a", header=False, index=False)
+    else:
+        new_df.to_csv(csv_filepath, index=False)
+
+def append_tweets_to_csv(tweets, csv_filepath=TWEETS_CSV_FILEPATH):
     """Param: tweets (list<dict>)"""
     column_names = [
         'status_id', 'status_text', 'truncated', 'retweet_status_id', 'reply_status_id', 'reply_user_id', 'is_quote', 'geo', 'created_at',
@@ -26,10 +41,10 @@ def append_to_csv(tweets, tweets_filepath=TWEETS_CSV_FILEPATH):
     #column_names = list(tweets[0].keys())
     #print("COLUMN NAMES", column_names)
     new_df = pandas.DataFrame(tweets, columns=column_names)
-    if os.path.isfile(tweets_filepath):
-        new_df.to_csv(tweets_filepath, mode="a", header=False, index=False)
+    if os.path.isfile(csv_filepath):
+        new_df.to_csv(csv_filepath, mode="a", header=False, index=False)
     else:
-        new_df.to_csv(tweets_filepath, index=False)
+        new_df.to_csv(csv_filepath, index=False)
 
 class BigQueryService():
     def __init__(self, project_name=BQ_PROJECT_NAME, dataset_name=BQ_DATASET_NAME):
@@ -97,8 +112,7 @@ if __name__ == "__main__":
 
         print("--------------------")
         print("IDEPOTENTLY SEEDING TOPICS...")
-        topics_df = pandas.read_csv(TOPICS_CSV_FILEPATH)
-        topics = topics_df["topic"].tolist()
+        topics = topic_seeds()
         bq_service.append_topics(topics)
 
         print("--------------------")

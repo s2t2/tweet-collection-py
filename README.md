@@ -21,10 +21,6 @@ pip install -r requirements.txt # (first time only)
 
 Create a ".env" file and set your environment variables there. See the ".env.example" file and instructions below for more details.
 
-### Custom Topics
-
-Set the `TOPICS` environment variable to customize the list of tweet keywords to filter.
-
 ### Twitter API Credentials
 
 Obtain credentials which provide access to the Twitter API. Set the environment variables `TWITTER_CONSUMER_KEY`, `TWITTER_CONSUMER_SECRET`, `TWITTER_ACCESS_TOKEN`, and `TWITTER_ACCESS_TOKEN_SECRET` accordingly.
@@ -72,9 +68,17 @@ And create a topics table with the following schema:
         }
     ]
 
-##### Seeding Topics
+### Sendgrid API Credentials
 
-Create a topics CSV file at "data/topics.csv", and insert / modify contents resembling:
+> If you don't care about sending notification emails, skip this section. Otherwise set the `WILL_NOTIFY` environment variable to "True" and continue...
+
+[Sign up for a SendGrid account](https://signup.sendgrid.com/) and verify your account, as necessary. [Create an API Key](https://app.sendgrid.com/settings/api_keys) with "full access" permissions, and set it as the `SENDGRID_API_KEY` environment variable.
+
+Finally set the `FROM_EMAIL` and `TO_EMAILS` environment variables to designate sender and recipients of error notification emails.
+
+### Seeding Topics
+
+To specify the list of keywords and phases to filter, create a topics CSV file at "data/topics.csv", and insert / modify contents resembling:
 
     topic
     impeach
@@ -89,9 +93,11 @@ Create a topics CSV file at "data/topics.csv", and insert / modify contents rese
     #FactsMatter
     Trump to Pelosi
 
-> NOTE: "topic" is the column name
+> NOTE: "topic" is the column name, and is required
 
-Finally, seed the development and production databases (and test the storage service):
+> OBSERVATIONS: a keyword like "impeach" will catch "#impeach" and "Impeach" and "#Impeach", but not "impeachment", however "impeachment" seems to catch "#ImpeachmentEve"? Hmmm. You might want to test your own filter behavior.
+
+If using local storage, this CSV file will act as the topics list. Otherwise if using remote storage, seed the development and production databases (and test the storage service):
 
 ```sh
 APP_ENV="development" STORAGE_ENV="remote" python -m app.storage_service
@@ -99,14 +105,6 @@ APP_ENV="production" STORAGE_ENV="remote" python -m app.storage_service
 ```
 
 > NOTE: the test database will be seeded with mock values the first time tests are run
-
-### Sendgrid API Credentials
-
-> If you don't care about sending notification emails, skip this section. Otherwise set the `WILL_NOTIFY` environment variable to "True" and continue...
-
-[Sign up for a SendGrid account](https://signup.sendgrid.com/) and verify your account, as necessary. [Create an API Key](https://app.sendgrid.com/settings/api_keys) with "full access" permissions, and set it as the `SENDGRID_API_KEY` environment variable.
-
-Finally set the `FROM_EMAIL` and `TO_EMAILS` environment variables to designate sender and recipients of error notification emails.
 
 ## Usage
 
