@@ -26,11 +26,18 @@ def topic_seeds(csv_filepath=TOPICS_CSV_FILEPATH):
 def append_topics_to_csv(topics, csv_filepath=TOPICS_CSV_FILEPATH):
     """Param: topics (list<str>) like ['topic1', 'topic 2']"""
     column_names = ['topic']
-    new_df = pandas.DataFrame(topics, columns=column_names)
+    topics_df = pandas.DataFrame(topics, columns=column_names)
+
     if os.path.isfile(csv_filepath):
+        existing_df = pandas.read_csv(csv_filepath)
+        new_df = pandas.concat([existing_df, topics_df])
+        new_df.drop_duplicates(subset=["topic"], inplace=True, keep='first')
+        new_df.reset_index(inplace=True, drop=False) # fixes duplicate indices resulting from the merge
         new_df.to_csv(csv_filepath, mode="a", header=False, index=False)
+        return new_df
     else:
-        new_df.to_csv(csv_filepath, index=False)
+        topics_df.to_csv(csv_filepath, index=False)
+        return topics_df
 
 def append_tweets_to_csv(tweets, csv_filepath=TWEETS_CSV_FILEPATH):
     """Param: tweets (list<dict>)"""

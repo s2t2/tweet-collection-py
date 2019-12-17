@@ -14,16 +14,16 @@ def test_csv_topic_additions():
         os.remove(TOPICS_CSV_FILEPATH)
 
     # when the local CSV file doesn't yet exist (first rows):
-    append_topics_to_csv(["local topic 1", "local topic 2"], csv_filepath=TOPICS_CSV_FILEPATH)
+    topics_df = append_topics_to_csv(["local topic 1", "local topic 2"], csv_filepath=TOPICS_CSV_FILEPATH)
+    print(topics_df.head())
     assert os.path.isfile(TOPICS_CSV_FILEPATH)
-    topics_df = pandas.read_csv(TOPICS_CSV_FILEPATH)
     assert len(topics_df) == 2
 
     # after the local CSV file already exists (subsequent rows):
-    append_topics_to_csv(["local topic 3", "local topic 1"], csv_filepath=TOPICS_CSV_FILEPATH)
-    topics_df = pandas.read_csv(TOPICS_CSV_FILEPATH)
+    appended_topics_df = append_topics_to_csv(["local topic 3", "local topic 1"], csv_filepath=TOPICS_CSV_FILEPATH)
     # it should only insert topics if they don't already exist
-    assert len(topics_df) == 3
+    print(appended_topics_df.head())
+    assert len(appended_topics_df) == 3
 
 def test_csv_tweet_collection(parsed_tweet, parsed_retweet):
     TWEETS_CSV_FILEPATH = os.path.join(DATA_DIR, "tweets.csv")
