@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from google.cloud import bigquery
 import pandas
 
-from app import APP_NAME, APP_ENV
+from app import APP_NAME, APP_ENV, STORAGE_ENV
 from app.datetime_decorator import parse_timestamp
 
 load_dotenv()
@@ -71,25 +71,17 @@ class BigQueryService():
         Inserts topics unless they already exist
         Param: topics (list<dict>)
         """
-        created_at = parse_timestamp(datetime.now())
-
         rows = self.fetch_topics()
         existing_topics = [row.topic for row in rows]
         new_topics = [topic for topic in topics if topic not in existing_topics]
         if new_topics:
+            created_at = parse_timestamp(datetime.now())
             rows_to_insert = [[new_topic, created_at] for new_topic in new_topics]
             errors = self.client.insert_rows(self.topics_table, rows_to_insert)
             return errors
         else:
             print("NO NEW TOPICS...")
             return []
-
-    #def add_topic(self, new_topic):
-    #    """Param: topic (str)"""
-    #    created_at = parse_timestamp(datetime.now())
-    #    rows_to_insert = [[new_topic, created_at]]
-    #    errors = self.client.insert_rows(self.topics_table, rows_to_insert)
-    #    return errors
 
     def execute_query(self, sql):
         """Param: sql (str)"""
@@ -98,52 +90,53 @@ class BigQueryService():
 
 if __name__ == "__main__":
 
-    from conftest import tweet_attributes, retweet_attributes
+    if STORAGE_ENV == "remote":
+        from conftest import tweet_attributes, retweet_attributes
 
-    #print("BIGQUERY SERVICE...")
-    bq_service = BigQueryService()
-    #print("DATASET ADDRESS:", bq_service.dataset_address.upper())
+        bq_service = BigQueryService()
 
-    print("--------------------")
-    print("IDEPOTENTLY SEEDING TOPICS...")
-    topics_df = pandas.read_csv(TOPICS_CSV_FILEPATH)
-    topics = topics_df["topic"].tolist()
-    bq_service.append_topics(topics)
+        print("--------------------")
+        print("IDEPOTENTLY SEEDING TOPICS...")
+        topics_df = pandas.read_csv(TOPICS_CSV_FILEPATH)
+        topics = topics_df["topic"].tolist()
+        bq_service.append_topics(topics)
 
-    print("--------------------")
-    print("FETCHING TOPICS...")
-    results = bq_service.fetch_topics()
-    for row in results:
-        print(row)
-        print("---")
+        print("--------------------")
+        print("FETCHING TOPICS...")
+        results = bq_service.fetch_topics()
+        for row in results:
+            print(row)
+            print("---")
 
+        exit()
 
-    exit()
+        print("--------------------")
+        print("INSERTING TWEETS...")
+        print(tweet_attributes)
+        print(retweet_attributes)
+        errors = bq_service.append_tweets([tweet_attributes, retweet_attributes])
+        print("ERRORS:", errors)
 
-    print("--------------------")
-    print("INSERTING TWEETS...")
-    print(tweet_attributes)
-    print(retweet_attributes)
-    errors = bq_service.append_tweets([tweet_attributes, retweet_attributes])
-    print("ERRORS:", errors)
+        print("--------------------")
+        print("COUNTING TWEETS...")
+        sql = f"SELECT count(distinct status_id) as tweets_count FROM `{bq_service.tweets_table_address}`"
+        results = bq_service.execute_query(sql)
+        print(list(results)[0].tweets_count)
 
-    print("--------------------")
-    print("COUNTING TWEETS...")
-    sql = f"SELECT count(distinct status_id) as tweets_count FROM `{bq_service.tweets_table_address}`"
-    results = bq_service.execute_query(sql)
-    print(list(results)[0].tweets_count)
+        print("--------------------")
+        print("FETCHING LATEST TWEETS...")
+        sql = f"""
+            SELECT
+                status_id, status_text, geo, created_at,
+                user_id, user_screen_name, user_description, user_location, user_verified
+            FROM `{bq_service.tweets_table_address}`
+            ORDER BY created_at DESC
+            LIMIT 3
+        """
+        results = bq_service.execute_query(sql)
+        for row in results:
+            print(row)
+            print("---")
 
-    print("--------------------")
-    print("FETCHING LATEST TWEETS...")
-    sql = f"""
-        SELECT
-            status_id, status_text, geo, created_at,
-            user_id, user_screen_name, user_description, user_location, user_verified
-        FROM `{bq_service.tweets_table_address}`
-        ORDER BY created_at DESC
-        LIMIT 3
-    """
-    results = bq_service.execute_query(sql)
-    for row in results:
-        print(row)
-        print("---")
+    else:
+        print("THERE'S NOTHING GOING ON HERE WITH LOCAL STORAGE YET...")

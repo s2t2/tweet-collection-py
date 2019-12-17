@@ -72,6 +72,34 @@ And create a topics table with the following schema:
         }
     ]
 
+##### Seeding Topics
+
+Create a topics CSV file at "data/topics.csv", and insert / modify contents resembling:
+
+    topic
+    impeach
+    impeached
+    impeachment
+    #TrumpImpeachment
+    #ImpeachAndConvict
+    #ImpeachAndConvictTrump
+    #IGReport
+    #SenateHearing
+    #IGHearing
+    #FactsMatter
+    Trump to Pelosi
+
+> NOTE: "topic" is the column name
+
+Finally, seed the development and production databases (and test the storage service):
+
+```sh
+APP_ENV="development" STORAGE_ENV="remote" python -m app.storage_service
+APP_ENV="production" STORAGE_ENV="remote" python -m app.storage_service
+```
+
+> NOTE: the test database will be seeded with mock values the first time tests are run
+
 ### Sendgrid API Credentials
 
 > If you don't care about sending notification emails, skip this section. Otherwise set the `WILL_NOTIFY` environment variable to "True" and continue...
@@ -82,12 +110,6 @@ Finally set the `FROM_EMAIL` and `TO_EMAILS` environment variables to designate 
 
 ## Usage
 
-Test the storage service:
-
-```sh
-python -m app.storage_service
-```
-
 Run the tweet collector:
 
 ```sh
@@ -95,7 +117,7 @@ python -m app.tweet_collector
 # ... OR ...
 BATCH_SIZE=200 STORAGE_ENV="remote" python -m app.tweet_collector
 # ... OR ...
-APP_ENV="production" STORAGE_ENV="remote" WILL_NOTIFY=True python -m app.tweet_collector
+APP_ENV="development" STORAGE_ENV="remote" WILL_NOTIFY=True python -m app.tweet_collector
 ```
 
 ## Testing
