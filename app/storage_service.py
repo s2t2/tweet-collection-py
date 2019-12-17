@@ -32,9 +32,6 @@ def append_to_csv(tweets, tweets_filepath=TWEETS_CSV_FILEPATH):
 
 class BigQueryService():
     def __init__(self, project_name=BQ_PROJECT_NAME, dataset_name=BQ_DATASET_NAME):
-        print("--------")
-        print(dataset_name)
-        print("--------")
         self.client = bigquery.Client()
         self.project_name = project_name
         self.dataset_name = dataset_name #> "impeachment_production", "impeachment_test", etc.

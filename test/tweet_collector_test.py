@@ -14,11 +14,15 @@ def test_tweet_collector(listener):
     stream = Stream(listener.auth, listener)
     assert "filter" in dir(stream)
 
-def test_is_admin_request(tweet, admin_add_topic_tweet):
+def test_is_admin_request(bq_service, tweet, admin_add_topic_tweet):
     # use real vars here to accommodate the nature of the admin_add_topic_tweet (because we're testing real tweets)
-    real_listener = TweetCollector(dev_handle="@ImpeachmentTrak", admin_handles=["@prof_rossetti"], topics=["topic1", "topic2", "topic3"])
+    real_listener = TweetCollector(bq_service=bq_service, dev_handle="@ImpeachmentTrak", admin_handles=["@prof_rossetti"], topics=["topic1", "topic2", "topic3"])
     assert real_listener.is_admin_request(tweet) == False
     assert real_listener.is_admin_request(admin_add_topic_tweet) == True
+
+    misconfig_listener = TweetCollector(bq_service=bq_service, dev_handle="@ImpeachmentTrak", admin_handles=["@custom_admin"], topics=["topic1", "topic2", "topic3"])
+    assert misconfig_listener.is_admin_request(tweet) == False
+    assert misconfig_listener.is_admin_request(admin_add_topic_tweet) == False
 
 #def test_process_admin_request(real_listener, tweet, admin_add_topic_tweet):
 #    assert real_listener.process_admin_request(tweet) == False
