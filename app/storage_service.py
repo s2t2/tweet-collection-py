@@ -13,7 +13,6 @@ TWEETS_CSV_FILEPATH = os.path.join(DATA_DIR, "tweets.csv")
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS") # implicit check by google.cloud (and keras)
 BQ_PROJECT_NAME = os.getenv("BQ_PROJECT_NAME", default="tweet-collector-py")
 BQ_DATASET_NAME = os.getenv("BQ_DATASET_NAME", default=f"{APP_NAME}_{APP_ENV}") #> "impeachment_production"
-BQ_TABLE_NAME = os.getenv("BQ_TABLE_NAME", default="tweets")
 
 def append_to_csv(tweets, tweets_filepath=TWEETS_CSV_FILEPATH):
     """Param: tweets (list<dict>)"""
@@ -30,22 +29,26 @@ def append_to_csv(tweets, tweets_filepath=TWEETS_CSV_FILEPATH):
         new_df.to_csv(tweets_filepath, index=False)
 
 class BigQueryService():
-    def __init__(self, project_name=BQ_PROJECT_NAME, dataset_name=BQ_DATASET_NAME, table_name=BQ_TABLE_NAME):
+    def __init__(self, project_name=BQ_PROJECT_NAME, dataset_name=BQ_DATASET_NAME):
+        print("--------")
+        print(dataset_name)
+        print("--------")
         self.client = bigquery.Client()
         self.project_name = project_name
         self.dataset_name = dataset_name #> "impeachment_production", "impeachment_test", etc.
-        self.dataset_address = f"{self.project_name}.{self.dataset_name}"
         self.dataset_ref = self.client.dataset(self.dataset_name)
+        self.dataset_address = f"{self.project_name}.{self.dataset_name}"
+        print("BQ SERVICE:", self.dataset_address.upper())
 
         self.tweets_table_name = "tweets"
-        self.tweets_table_address = f"{self.dataset_address}.{self.tweets_table_name}"
         self.tweets_table_ref = self.dataset_ref.table(self.tweets_table_name)
         self.tweets_table = self.client.get_table(self.tweets_table_ref) # an API call (caches results for subsequent inserts)
+        self.tweets_table_address = f"{self.dataset_address}.{self.tweets_table_name}"
 
         self.topics_table_name = "topics"
-        self.topics_table_address = f"{self.dataset_address}.{self.topics_table_name}"
         self.topics_table_ref = self.dataset_ref.table(self.topics_table_name)
         self.topics_table = self.client.get_table(self.topics_table_ref) # an API call (caches results for subsequent inserts)
+        self.topics_table_address = f"{self.dataset_address}.{self.topics_table_name}"
 
     def append_tweets(self, tweets):
         """Param: tweets (list<dict>)"""

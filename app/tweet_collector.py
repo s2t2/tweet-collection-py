@@ -41,18 +41,18 @@ def parse_admin_handles(csv_str=ADMIN_HANDLES):
 
 class TweetCollector(StreamListener):
 
-    def __init__(self, batch_size=BATCH_SIZE, will_notify=WILL_NOTIFY, bq_service=BigQueryService(),
-                        topics=parse_topics(), dev_handle=TWITTER_HANDLE, admin_handles=parse_admin_handles()):
+    def __init__(self, bq_service=None, topics=None, dev_handle=TWITTER_HANDLE, admin_handles=None,
+                                        batch_size=BATCH_SIZE, will_notify=WILL_NOTIFY):
         self.api = twitter_api()
         self.auth = self.api.auth
         self.counter = 0
-        self.bq_service = bq_service
+        self.bq_service = bq_service or BigQueryService()
         self.batch_size = batch_size
         self.batch = []
         self.will_notify = (will_notify == True)
-        self.topics = topics
+        self.topics = topics or parse_topics()
         self.dev_handle = dev_handle
-        self.admin_handles = admin_handles
+        self.admin_handles = admin_handles or parse_admin_handles()
 
     def on_status(self, status):
         """Param status (tweepy.models.Status)"""
@@ -79,7 +79,8 @@ class TweetCollector(StreamListener):
         if new_topic:
             # TODO: add the topic to the production topics datastore
             print("NEW TOPIC!", new_topic)
-            breakpoint()
+            #breakpoint()
+        return [] # TODO: make a request
 
     @property
     def add_topic_command(self):

@@ -58,6 +58,11 @@ Within each dataset, create a table called "tweets", using the following table s
     user_verified:BOOLEAN,
     user_created_at:TIMESTAMP
 
+And create a topics table with the following schema:
+
+    topic:STRING,
+    created_at:TIMESTAMP
+
 ### Sendgrid API Credentials
 
 > If you don't care about sending notification emails, skip this section. Otherwise set the `WILL_NOTIFY` environment variable to "True" and continue...
