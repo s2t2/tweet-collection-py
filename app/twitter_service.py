@@ -3,6 +3,8 @@ from pprint import pprint
 from dotenv import load_dotenv
 import tweepy
 
+from app.datetime_decorator import parse_timestamp
+
 load_dotenv()
 
 CONSUMER_KEY = os.getenv("TWITTER_CONSUMER_KEY", default="OOPS")
@@ -51,13 +53,6 @@ def parse_status(status):
         "user_created_at": parse_timestamp(user.created_at),
     }
     return row
-
-def parse_timestamp(my_dt):
-    """
-    Param my_dt (datetime.datetime) like status.created_at
-    Converts datetime to string, formatted for Google BigQuery as YYYY-MM-DD HH:MM[:SS[.SSSSSS]]
-    """
-    return my_dt.strftime("%Y-%m-%d %H:%M:%S")
 
 def parse_string(my_str):
     """

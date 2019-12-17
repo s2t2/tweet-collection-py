@@ -1,9 +1,11 @@
+from datetime import datetime
 import os
 from dotenv import load_dotenv
 from google.cloud import bigquery
 import pandas
 
 from app import APP_NAME, APP_ENV
+from app.datetime_decorator import parse_timestamp
 
 load_dotenv()
 
@@ -58,7 +60,8 @@ class BigQueryService():
 
     def add_topic(self, new_topic):
         """Param: topic (str)"""
-        rows_to_insert = [[new_topic]]
+        created_at = parse_timestamp(datetime.now())
+        rows_to_insert = [[new_topic, created_at]]
         errors = self.client.insert_rows(self.topics_table, rows_to_insert)
         return errors
 
