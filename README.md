@@ -60,8 +60,17 @@ Within each dataset, create a table called "tweets", using the following table s
 
 And create a topics table with the following schema:
 
-    topic:STRING,
-    created_at:TIMESTAMP
+    [
+        {
+            "name": "topic",
+            "type": "STRING",
+            "mode": "REQUIRED"
+        },
+        {
+            "name": "created_at",
+            "type": "TIMESTAMP"
+        }
+    ]
 
 ### Sendgrid API Credentials
 

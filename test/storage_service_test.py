@@ -1,5 +1,7 @@
 import os
 import pandas
+from google.cloud.bigquery.client import Client
+from google.cloud.bigquery.table import RowIterator, Row
 
 from app.storage_service import append_to_csv, BigQueryService
 
@@ -21,17 +23,20 @@ def test_csv_tweet_collection(parsed_tweet, parsed_retweet):
     tweets_df = pandas.read_csv(TWEETS_CSV_FILEPATH)
     assert len(tweets_df) == 4
 
-#print("BQ CLIENT", type(client)) #> <class 'google.cloud.bigquery.client.Client'>
-#print("RESULTS", type(results)) #>  <class 'google.cloud.bigquery.table.RowIterator'>
-#print("ROW", type(row)) #> <class 'google.cloud.bigquery.table.Row'>
-
 def test_bq_service(bq_service):
+    assert isinstance(bq_service.client, Client)
     assert bq_service.dataset_name == "impeachment_test"
 
 def test_bq_tweet_collection(bq_service, parsed_tweet, parsed_retweet):
     errors = bq_service.append_tweets([parsed_tweet, parsed_retweet])
     assert errors == []
 
-def test_bq_topic_addition(bq_service):
-    errors = bq_service.add_topic("#MyNewTopic")
+def test_bq_fetch_topics(bq_service):
+    results = bq_service.fetch_topics()
+    assert isinstance(results, RowIterator)
+    assert isinstance(results[0], Row)
+    assert results[0].topic == "#MyNewTopic"
+
+def test_bq_append_topics(bq_service):
+    errors = bq_service.append_topics(["#MyNewTopic", "Another Topic"])
     assert errors == []

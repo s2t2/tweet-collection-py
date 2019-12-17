@@ -11,6 +11,7 @@ load_dotenv()
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
 TWEETS_CSV_FILEPATH = os.path.join(DATA_DIR, "tweets.csv")
+TOPICS_CSV_FILEPATH = os.path.join(DATA_DIR, "topics.csv")
 
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS") # implicit check by google.cloud (and keras)
 BQ_PROJECT_NAME = os.getenv("BQ_PROJECT_NAME", default="tweet-collector-py")
@@ -55,12 +56,40 @@ class BigQueryService():
         errors = self.client.insert_rows(self.tweets_table, rows_to_insert)
         return errors
 
-    def add_topic(self, new_topic):
-        """Param: topic (str)"""
+    def fetch_topics(self):
+        """Returns a list of table rows"""
+        sql = f"""
+            SELECT topic, created_at
+            FROM `{self.topics_table_address}`
+            ORDER BY created_at;
+        """
+        results = self.execute_query(sql)
+        return list(results)
+
+    def append_topics(self, topics):
+        """
+        Inserts topics unless they already exist
+        Param: topics (list<dict>)
+        """
         created_at = parse_timestamp(datetime.now())
-        rows_to_insert = [[new_topic, created_at]]
-        errors = self.client.insert_rows(self.topics_table, rows_to_insert)
-        return errors
+
+        rows = self.fetch_topics()
+        existing_topics = [row.topic for row in rows]
+        new_topics = [topic for topic in topics if topic not in existing_topics]
+        if new_topics:
+            rows_to_insert = [[new_topic, created_at] for new_topic in new_topics]
+            errors = self.client.insert_rows(self.topics_table, rows_to_insert)
+            return errors
+        else:
+            print("NO NEW TOPICS...")
+            return []
+
+    #def add_topic(self, new_topic):
+    #    """Param: topic (str)"""
+    #    created_at = parse_timestamp(datetime.now())
+    #    rows_to_insert = [[new_topic, created_at]]
+    #    errors = self.client.insert_rows(self.topics_table, rows_to_insert)
+    #    return errors
 
     def execute_query(self, sql):
         """Param: sql (str)"""
@@ -71,9 +100,25 @@ if __name__ == "__main__":
 
     from conftest import tweet_attributes, retweet_attributes
 
-    print("BIGQUERY SERVICE...")
+    #print("BIGQUERY SERVICE...")
     bq_service = BigQueryService()
-    print("DATASET ADDRESS:", bq_service.dataset_address.upper())
+    #print("DATASET ADDRESS:", bq_service.dataset_address.upper())
+
+    print("--------------------")
+    print("IDEPOTENTLY SEEDING TOPICS...")
+    topics_df = pandas.read_csv(TOPICS_CSV_FILEPATH)
+    topics = topics_df["topic"].tolist()
+    bq_service.append_topics(topics)
+
+    print("--------------------")
+    print("FETCHING TOPICS...")
+    results = bq_service.fetch_topics()
+    for row in results:
+        print(row)
+        print("---")
+
+
+    exit()
 
     print("--------------------")
     print("INSERTING TWEETS...")
@@ -97,17 +142,6 @@ if __name__ == "__main__":
         FROM `{bq_service.tweets_table_address}`
         ORDER BY created_at DESC
         LIMIT 3
-    """
-    results = bq_service.execute_query(sql)
-    for row in results:
-        print(row)
-        print("---")
-
-    print("--------------------")
-    print("FETCHING TOPICS...")
-    sql = f"""
-        SELECT topic, created_at
-        FROM `{bq_service.topics_table_address}`
     """
     results = bq_service.execute_query(sql)
     for row in results:
