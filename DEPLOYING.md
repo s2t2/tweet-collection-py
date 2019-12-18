@@ -24,7 +24,8 @@ heroku config:set APP_NAME="impeachment"
 heroku config:set APP_ENV="production"
 heroku config:set STORAGE_ENV="remote"
 
-heroku config:set TOPICS="____, _____, ____"
+heroku config:set TWITTER_HANDLE="@____"
+heroku config:set ADMIN_HANDLES="@____, @_____"
 
 heroku config:set TWITTER_CONSUMER_KEY="____"
 heroku config:set TWITTER_CONSUMER_SECRET="____"
