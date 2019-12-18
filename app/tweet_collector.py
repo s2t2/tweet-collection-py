@@ -101,6 +101,7 @@ class TweetCollector(StreamListener):
                 self.bq_service.append_topics([new_topic])
             else:
                 append_topics_to_csv([new_topic])
+            self.api.create_favorite(status.id) # give the admin some confirmation the request has been processed
             self.reset_topics() # after updating the respective datastore, refresh topics
 
     @property
