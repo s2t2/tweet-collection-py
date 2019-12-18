@@ -44,14 +44,15 @@ class TweetCollector(StreamListener):
         self.will_notify = (will_notify == True)
         self.dev_handle = dev_handle
         self.admin_handles = admin_handles or parse_admin_handles()
-        self.__set_topics__(topics_csv_filepath)
+        self.topics_csv_filepath = topics_csv_filepath # todo: move to storage service
+        self.__set_topics__()
 
-    def __set_topics__(self, topics_csv_filepath):
+    def __set_topics__(self):
         if STORAGE_ENV == "remote":
             rows = self.bq_service.fetch_topics()
             self.topics = [row.topic for row in rows]
         else:
-            self.topics = local_topics(topics_csv_filepath) # todo: the storage service should accept this topics_csv_filepath option
+            self.topics = local_topics(self.topics_csv_filepath)
 
         if self.dev_handle and self.dev_handle not in self.topics:
             print("TRACKING TWITTER HANDLE", self.dev_handle)
