@@ -10,27 +10,15 @@ from urllib3.exceptions import ProtocolError
 from app import APP_ENV, STORAGE_ENV
 from app.twitter_service import twitter_api, parse_status
 from app.notification_service import send_email
-from app.storage_service import append_to_csv, BigQueryService
+from app.storage_service import local_topics, append_topics_to_csv, append_tweets_to_csv, BigQueryService
 
 load_dotenv()
-
-#TOPICS_LIST = ["impeach", "impeachment"] # todo: dynamically compile list from comma-separated env var string like "topic1,topic2"
-# NOTE: "impeachment" keywords don't trigger the "impeach" filter, so adding "impeachment" as well
-#TOPICS_LIST = ["impeach -filter:retweets"] # doesn't work
-TOPICS = os.getenv("TOPICS", default="impeach, impeached, impeachment, #TrumpImpeachment, #ImpeachAndConvict, #ImpeachAndConvictTrump, #IGReport, #SenateHearing, #IGHearing")
 
 BATCH_SIZE = int(os.getenv("BATCH_SIZE", default="20")) # coerces to int
 WILL_NOTIFY = (os.getenv("WILL_NOTIFY", default="False") == "True") # coerces to bool
 
 TWITTER_HANDLE = os.getenv("TWITTER_HANDLE")
 ADMIN_HANDLES = os.getenv("ADMIN_HANDLES")
-
-def parse_topics(csv_str=TOPICS):
-    topics = [topic.strip() for topic in csv_str.split(",")]
-    if TWITTER_HANDLE:
-        print("TRACKING TWITTER HANDLE", TWITTER_HANDLE)
-        topics.append(TWITTER_HANDLE) # track the app's handle, so we can respond to mentions
-    return topics
 
 def parse_admin_handles(csv_str=ADMIN_HANDLES):
     if csv_str:
@@ -50,9 +38,25 @@ class TweetCollector(StreamListener):
         self.batch_size = batch_size
         self.batch = []
         self.will_notify = (will_notify == True)
-        self.topics = topics or parse_topics()
+        if topics: # using this for testing purposes. TODO: simplify construction using APP_ENV and test topics CSV
+            self.topics = topics
+        else:
+            self.set_topics()
         self.dev_handle = dev_handle
         self.admin_handles = admin_handles or parse_admin_handles()
+
+    def set_topics(self):
+        if STORAGE_ENV == "remote":
+            rows = self.bq_service.fetch_topics()
+            self.topics = [row.topic for row in rows]
+        else:
+            self.topics = local_topics()
+
+        if TWITTER_HANDLE and TWITTER_HANDLE not in self.topics:
+            print("TRACKING TWITTER HANDLE", TWITTER_HANDLE)
+            self.topics.append(TWITTER_HANDLE.strip()) # track the app's handle, so we can respond to mentions
+
+        print("(RE)SET TOPICS:", self.topics)
 
     def on_status(self, status):
         """Param status (tweepy.models.Status)"""
@@ -61,7 +65,6 @@ class TweetCollector(StreamListener):
             self.process_admin_request(status)
         elif self.is_collectable(status):
             self.counter +=1
-            ###if self.counter > 3: raise RuntimeError("OOPS")
             print("----------------")
             print(f"DETECTED AN INCOMING TWEET! ({self.counter} -- {status.id_str})")
             self.collect_in_batches(status)
@@ -77,14 +80,18 @@ class TweetCollector(StreamListener):
     def process_admin_request(self, status):
         new_topic = self.parse_new_topic(status.text)
         if new_topic:
-            # TODO: add the topic to the production topics datastore
-            print("NEW TOPIC!", new_topic)
-            #breakpoint()
-        return [] # TODO: make a request
+            print("NEW TOPIC REQUEST:", new_topic)
+            if STORAGE_ENV == "remote":
+                errors = self.bq_service.append_topics([new_topic])
+            else:
+                append_topics_to_csv([new_topic])
+                errors = []
+            self.set_topics() # after updating the respective datastore, refresh topics
+            return errors
 
     @property
     def add_topic_command(self):
-        return f"{self.dev_handle} add topic "
+        return f"{self.dev_handle} add topic: "
 
     def parse_new_topic(self, status_text):
         """Param status_text (str)"""
@@ -127,7 +134,7 @@ class TweetCollector(StreamListener):
             print("STORING BATCH OF", len(self.batch), "TWEETS...")
 
             if STORAGE_ENV == "local":
-                append_to_csv(self.batch)
+                append_tweets_to_csv(self.batch)
             elif STORAGE_ENV == "remote":
                 self.bq_service.append_tweets(self.batch)
 
@@ -203,7 +210,6 @@ if __name__ == "__main__":
     print("STREAM", type(stream))
 
     topics = listener.topics
-    print("TOPICS:", topics)
     #stream.filter(track=topics)
     # handle ProtocolErrors...
     while True:

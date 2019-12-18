@@ -29,14 +29,14 @@ def test_is_admin_request(bq_service, tweet, admin_add_topic_tweet):
 #    assert real_listener.process_admin_request(admin_add_topic_tweet) == True
 
 def test_add_topic_command(listener):
-    assert listener.add_topic_command == "@dev_account add topic "
+    assert listener.add_topic_command == "@dev_account add topic: "
 
 def test_parse_new_topic(listener):
     assert listener.parse_new_topic("This is a tweet about stuff") == None
     assert listener.parse_new_topic("@dev_account This is a tweet about stuff") == None
-    assert listener.parse_new_topic("@dev_account add topic ") == None
-    assert listener.parse_new_topic("@dev_account add topic #FactsMatter") == "#FactsMatter"
-    assert listener.parse_new_topic("@dev_account add topic Two Keywords") == "Two Keywords"
+    assert listener.parse_new_topic("@dev_account add topic: ") == None
+    assert listener.parse_new_topic("@dev_account add topic: #FactsMatter") == "#FactsMatter"
+    assert listener.parse_new_topic("@dev_account add topic: Two Keywords") == "Two Keywords"
 
 def test_is_collectable(listener, tweet, retweet):
     assert listener.is_collectable(tweet) == True
