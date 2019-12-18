@@ -21,13 +21,9 @@ pip install -r requirements.txt # (first time only)
 
 Create a ".env" file and set your environment variables there. See the ".env.example" file and instructions below for more details.
 
-### Custom Topics
-
-Set the `TOPICS` environment variable to customize the list of tweet keywords to filter.
-
 ### Twitter API Credentials
 
-Obtain credentials which provide access to the Twitter API. Set the environment variables `TWITTER_CONSUMER_KEY`, `TWITTER_CONSUMER_SECRET`, `TWITTER_ACCESS_TOKEN`, and `TWITTER_ACCESS_TOKEN_SECRET` accordingly.
+Obtain credentials which provide read and write access to the Twitter API. Set the environment variables `TWITTER_CONSUMER_KEY`, `TWITTER_CONSUMER_SECRET`, `TWITTER_ACCESS_TOKEN`, and `TWITTER_ACCESS_TOKEN_SECRET` accordingly.
 
 ### Google API Credentials
 
@@ -58,6 +54,20 @@ Within each dataset, create a table called "tweets", using the following table s
     user_verified:BOOLEAN,
     user_created_at:TIMESTAMP
 
+And create a topics table with the following schema:
+
+    [
+        {
+            "name": "topic",
+            "type": "STRING",
+            "mode": "REQUIRED"
+        },
+        {
+            "name": "created_at",
+            "type": "TIMESTAMP"
+        }
+    ]
+
 ### Sendgrid API Credentials
 
 > If you don't care about sending notification emails, skip this section. Otherwise set the `WILL_NOTIFY` environment variable to "True" and continue...
@@ -66,13 +76,37 @@ Within each dataset, create a table called "tweets", using the following table s
 
 Finally set the `FROM_EMAIL` and `TO_EMAILS` environment variables to designate sender and recipients of error notification emails.
 
-## Usage
+### Seeding Topics
 
-Test the storage service:
+To specify the list of keywords and phases to filter, create a topics CSV file at "data/topics.csv", and insert / modify contents resembling:
+
+    topic
+    impeach
+    impeached
+    impeachment
+    #TrumpImpeachment
+    #ImpeachAndConvict
+    #ImpeachAndConvictTrump
+    #IGReport
+    #SenateHearing
+    #IGHearing
+    #FactsMatter
+    Trump to Pelosi
+
+> NOTE: "topic" is the column name, and is required
+
+If using local storage, this CSV file will act as the topics list. Otherwise if using remote storage, seed the development and production databases (and test the storage service):
 
 ```sh
-python -m app.storage_service
+APP_ENV="development" STORAGE_ENV="remote" python -m app.storage_service
+APP_ENV="production" STORAGE_ENV="remote" python -m app.storage_service
 ```
+
+> NOTE: yes, seed the production database from your local machine, and not on production iteself, because there will be no topics CSV file on the production server (use your own)
+
+> NOTE: the test database will be seeded with mock values the first time tests are run
+
+## Usage
 
 Run the tweet collector:
 
@@ -81,7 +115,7 @@ python -m app.tweet_collector
 # ... OR ...
 BATCH_SIZE=200 STORAGE_ENV="remote" python -m app.tweet_collector
 # ... OR ...
-APP_ENV="production" STORAGE_ENV="remote" WILL_NOTIFY=True python -m app.tweet_collector
+APP_ENV="development" STORAGE_ENV="remote" WILL_NOTIFY=True python -m app.tweet_collector
 ```
 
 ## Testing
