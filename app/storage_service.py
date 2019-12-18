@@ -19,8 +19,10 @@ BQ_DATASET_NAME = os.getenv("BQ_DATASET_NAME", default=f"{APP_NAME}_{APP_ENV}") 
 
 # TODO: CSVService
 
-def local_topics(csv_filepath=TOPICS_CSV_FILEPATH):
+def local_topics(csv_filepath=None):
     """Returns a list of topic strings from the local topics CSV file"""
+    if not csv_filepath:
+        csv_filepath = TOPICS_CSV_FILEPATH
     topics_df = pandas.read_csv(csv_filepath)
     topics = topics_df["topic"].tolist()
     return topics

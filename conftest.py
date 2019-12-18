@@ -1,9 +1,12 @@
-
+import os
 import pytest
 
 from app.twitter_service import twitter_api as api
 from app.storage_service import BigQueryService
 from app.tweet_collector import TweetCollector
+
+DATA_DIR = os.path.join(os.path.dirname(__file__), "test", "data")
+MOCK_TOPICS_CSV_FILEPATH = os.path.join(DATA_DIR, "mock_topics.csv")
 
 #
 # BIGQUERY API CALLS
@@ -16,11 +19,15 @@ def bq_service():
 @pytest.fixture(scope="module")
 def listener(bq_service):
     return TweetCollector(
-        bq_service=bq_service,
+        bq_service=bq_service, # todo: convert to storage service
         dev_handle="@dev_account",
         admin_handles=["@admin1", "@admin2"],
-        topics=['topic1', 'topic2', '#topic3', "#TopicFour"]
+        topics_csv_filepath=MOCK_TOPICS_CSV_FILEPATH # todo: move to storage service
     )
+
+@pytest.fixture(scope="module")
+def handleless_listener(bq_service):
+    return TweetCollector(bq_service=bq_service, dev_handle=None, admin_handles=None, topics_csv_filepath=MOCK_TOPICS_CSV_FILEPATH)
 
 #
 # TWITTER API CALLS

@@ -3,24 +3,26 @@ from pprint import pprint
 from tweepy import Stream
 
 from app.tweet_collector import TweetCollector
+from conftest import MOCK_TOPICS_CSV_FILEPATH
 
-def test_tweet_collector(listener):
+def test_tweet_collector(listener, handleless_listener):
     assert "on_status" in dir(listener)
     assert "collect_in_batches" in dir(listener)
-    assert listener.topics == ['topic1', 'topic2', '#topic3', "#TopicFour"]
     assert listener.dev_handle == '@dev_account'
     assert listener.admin_handles == ['@admin1', '@admin2']
+    assert sorted(listener.topics) == ['#HelloWorld', '@dev_account', 'my mock topic']
+    assert sorted(handleless_listener.topics) == ['#HelloWorld', 'my mock topic']
 
     stream = Stream(listener.auth, listener)
     assert "filter" in dir(stream)
 
 def test_is_admin_request(bq_service, tweet, admin_add_topic_tweet):
     # use real vars here to accommodate the nature of the admin_add_topic_tweet (because we're testing real tweets)
-    real_listener = TweetCollector(bq_service=bq_service, dev_handle="@ImpeachmentTrak", admin_handles=["@prof_rossetti"], topics=["topic1", "topic2", "topic3"])
+    real_listener = TweetCollector(bq_service=bq_service, dev_handle="@ImpeachmentTrak", admin_handles=["@prof_rossetti"], topics_csv_filepath=MOCK_TOPICS_CSV_FILEPATH)
     assert real_listener.is_admin_request(tweet) == False
     assert real_listener.is_admin_request(admin_add_topic_tweet) == True
 
-    misconfig_listener = TweetCollector(bq_service=bq_service, dev_handle="@ImpeachmentTrak", admin_handles=["@custom_admin"], topics=["topic1", "topic2", "topic3"])
+    misconfig_listener = TweetCollector(bq_service=bq_service, dev_handle="@ImpeachmentTrak", admin_handles=["@custom_admin"], topics_csv_filepath=MOCK_TOPICS_CSV_FILEPATH)
     assert misconfig_listener.is_admin_request(tweet) == False
     assert misconfig_listener.is_admin_request(admin_add_topic_tweet) == False
 

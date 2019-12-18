@@ -95,8 +95,6 @@ To specify the list of keywords and phases to filter, create a topics CSV file a
 
 > NOTE: "topic" is the column name, and is required
 
-> OBSERVATIONS: a keyword like "impeach" will catch "#impeach" and "Impeach" and "#Impeach", but not "impeachment", however "impeachment" seems to catch "#ImpeachmentEve"? Hmmm. You might want to test your own filter behavior.
-
 If using local storage, this CSV file will act as the topics list. Otherwise if using remote storage, seed the development and production databases (and test the storage service):
 
 ```sh

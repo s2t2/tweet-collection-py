@@ -33,32 +33,29 @@ class TopicResetEvent(Exception):
 # todo: refactor checks for the storage env into a single storage service which combines the bq service and a new csv service, and knows which one to use, so this class can use a higher-level API
 class TweetCollector(StreamListener):
 
-    def __init__(self, bq_service=None, topics=None, dev_handle=TWITTER_HANDLE, admin_handles=None,
-                                        batch_size=BATCH_SIZE, will_notify=WILL_NOTIFY):
+    def __init__(self, bq_service=None, batch_size=BATCH_SIZE, will_notify=WILL_NOTIFY,
+                                        dev_handle=TWITTER_HANDLE, admin_handles=None, topics_csv_filepath=None):
         self.api = twitter_api()
         self.auth = self.api.auth
         self.counter = 0
-        self.bq_service = bq_service or BigQueryService()
+        self.bq_service = bq_service or BigQueryService() # todo: convert to storage service
         self.batch_size = batch_size
         self.batch = []
         self.will_notify = (will_notify == True)
-        if topics: # using this for testing purposes. TODO: simplify construction using APP_ENV and test topics CSV
-            self.topics = topics
-        else:
-            self.__set_topics__()
         self.dev_handle = dev_handle
         self.admin_handles = admin_handles or parse_admin_handles()
+        self.__set_topics__(topics_csv_filepath)
 
-    def __set_topics__(self):
+    def __set_topics__(self, topics_csv_filepath):
         if STORAGE_ENV == "remote":
             rows = self.bq_service.fetch_topics()
             self.topics = [row.topic for row in rows]
         else:
-            self.topics = local_topics()
+            self.topics = local_topics(topics_csv_filepath) # todo: the storage service should accept this topics_csv_filepath option
 
-        if TWITTER_HANDLE and TWITTER_HANDLE not in self.topics:
-            print("TRACKING TWITTER HANDLE", TWITTER_HANDLE)
-            self.topics.append(TWITTER_HANDLE.strip()) # track the app's handle, so we can respond to mentions
+        if self.dev_handle and self.dev_handle not in self.topics:
+            print("TRACKING TWITTER HANDLE", self.dev_handle)
+            self.topics.append(self.dev_handle.strip()) # track the app's handle, so we can respond to mentions
 
         print("SET TOPICS:", self.topics)
 

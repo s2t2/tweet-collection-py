@@ -4,11 +4,10 @@ from google.cloud.bigquery.client import Client
 from google.cloud.bigquery.table import RowIterator, Row
 
 from app.storage_service import local_topics, append_tweets_to_csv, append_topics_to_csv, BigQueryService
-
-DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+from conftest import DATA_DIR, MOCK_TOPICS_CSV_FILEPATH
 
 def test_local_topics():
-    topics = local_topics(os.path.join(DATA_DIR, "mock_topics.csv"))
+    topics = local_topics(MOCK_TOPICS_CSV_FILEPATH)
     assert sorted(topics) == ["#HelloWorld", "my mock topic"]
 
 def test_csv_topic_additions():
