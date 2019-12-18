@@ -102,6 +102,8 @@ APP_ENV="development" STORAGE_ENV="remote" python -m app.storage_service
 APP_ENV="production" STORAGE_ENV="remote" python -m app.storage_service
 ```
 
+> NOTE: yes, seed the production database from your local machine, and not on production iteself, because there will be no topics CSV file on the production server (use your own)
+
 > NOTE: the test database will be seeded with mock values the first time tests are run
 
 ## Usage
