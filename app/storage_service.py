@@ -17,7 +17,7 @@ GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS") # i
 BQ_PROJECT_NAME = os.getenv("BQ_PROJECT_NAME", default="tweet-collector-py")
 BQ_DATASET_NAME = os.getenv("BQ_DATASET_NAME", default=f"{APP_NAME}_{APP_ENV}") #> "impeachment_production"
 
-def topic_seeds(csv_filepath=TOPICS_CSV_FILEPATH):
+def local_topics(csv_filepath=TOPICS_CSV_FILEPATH):
     """Returns a list of topic strings from the local topics CSV file"""
     topics_df = pandas.read_csv(csv_filepath)
     topics = topics_df["topic"].tolist()
@@ -32,12 +32,12 @@ def append_topics_to_csv(topics, csv_filepath=TOPICS_CSV_FILEPATH):
         existing_df = pandas.read_csv(csv_filepath)
         new_df = pandas.concat([existing_df, topics_df])
         new_df.drop_duplicates(subset=["topic"], inplace=True, keep='first')
-        new_df.reset_index(inplace=True, drop=False) # fixes duplicate indices resulting from the merge
-        new_df.to_csv(csv_filepath, mode="a", header=False, index=False)
-        return new_df
+        #new_df.reset_index(inplace=True, drop=False) # fixes duplicate indices resulting from the merge, but adds indices to the CSV for some reason, even if index=False
+        new_df.to_csv(csv_filepath, index=False)
+        #return new_df
     else:
         topics_df.to_csv(csv_filepath, index=False)
-        return topics_df
+        #return topics_df
 
 def append_tweets_to_csv(tweets, csv_filepath=TWEETS_CSV_FILEPATH):
     """Param: tweets (list<dict>)"""
@@ -119,7 +119,7 @@ if __name__ == "__main__":
 
         print("--------------------")
         print("IDEPOTENTLY SEEDING TOPICS...")
-        topics = topic_seeds()
+        topics = local_topics()
         bq_service.append_topics(topics)
 
         print("--------------------")

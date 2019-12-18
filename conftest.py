@@ -60,7 +60,8 @@ def retweet_ext(twitter_api):
 
 @pytest.fixture(scope="module")
 def admin_add_topic_tweet(twitter_api):
-    return twitter_api.get_status(1205337492695728133)
+    #return twitter_api.get_status(1205337492695728133) # doesn't have colon
+    return twitter_api.get_status(1207089823988760576)
 
 #
 # MOCKS
