@@ -112,6 +112,11 @@ class BigQueryService():
         job = self.client.query(sql)
         return job.result()
 
+    #def delete_all_topics(self):
+    #    sql = f"DELETE FROM {self.topics_table_address} WHERE 1=1;"
+    #    results = self.execute_query(sql)
+    #    return results
+
 if __name__ == "__main__":
 
     if STORAGE_ENV == "remote":
