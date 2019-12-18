@@ -30,6 +30,7 @@ def parse_admin_handles(csv_str=ADMIN_HANDLES):
 class TopicResetEvent(Exception):
     pass
 
+# todo: refactor checks for the storage env into a single storage service which combines the bq service and a new csv service, and knows which one to use, so this class can use a higher-level API
 class TweetCollector(StreamListener):
 
     def __init__(self, bq_service=None, topics=None, dev_handle=TWITTER_HANDLE, admin_handles=None,
@@ -44,11 +45,11 @@ class TweetCollector(StreamListener):
         if topics: # using this for testing purposes. TODO: simplify construction using APP_ENV and test topics CSV
             self.topics = topics
         else:
-            self.set_topics()
+            self.__set_topics__()
         self.dev_handle = dev_handle
         self.admin_handles = admin_handles or parse_admin_handles()
 
-    def set_topics(self):
+    def __set_topics__(self):
         if STORAGE_ENV == "remote":
             rows = self.bq_service.fetch_topics()
             self.topics = [row.topic for row in rows]
@@ -61,9 +62,13 @@ class TweetCollector(StreamListener):
 
         print("SET TOPICS:", self.topics)
 
-    def reset_topics(self):
-        self.set_topics()
-        raise TopicResetEvent("Let's trigger the listener to re-start in a kind of hacky way :-D")
+    #
+    # CONNECT AND LISTEN FOR TWEETS
+    #
+
+    def on_connect(self):
+        print("LISTENER IS CONNECTED!")
+        print("LISTENER WILL NOTIFY:", self.will_notify)
 
     def on_status(self, status):
         """Param status (tweepy.models.Status)"""
@@ -75,6 +80,10 @@ class TweetCollector(StreamListener):
             print("----------------")
             print(f"DETECTED AN INCOMING TWEET! ({self.counter} -- {status.id_str})")
             self.collect_in_batches(status)
+
+    #
+    # PROCESS ADMIN REQUEST TWEETS
+    #
 
     def is_admin_request(self, status):
         """Param status (tweepy.models.Status)"""
@@ -109,6 +118,14 @@ class TweetCollector(StreamListener):
                 return None
         else:
             return None
+
+    def reset_topics(self):
+        self.__set_topics__()
+        raise TopicResetEvent("Let's trigger the listener to re-start in a kind of hacky way :-D")
+
+    #
+    # COLLECT SPECIFIED TWEETS
+    #
 
     @staticmethod
     def is_collectable(status):
@@ -147,9 +164,9 @@ class TweetCollector(StreamListener):
             self.batch = []
             self.counter = 0
 
-    def on_connect(self):
-        print("LISTENER IS CONNECTED!")
-        print("LISTENER WILL NOTIFY:", self.will_notify)
+    #
+    # HANDLE ERRORS
+    #
 
     def on_exception(self, exception):
         # has encountered errors:
