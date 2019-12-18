@@ -3,3 +3,4 @@ tweepy # for interfacing with the Twitter API
 google-cloud-bigquery # for interfacing with the BigQuery API
 pandas
 sendgrid==6.0.5
+pytest
