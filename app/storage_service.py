@@ -17,6 +17,8 @@ GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS") # i
 BQ_PROJECT_NAME = os.getenv("BQ_PROJECT_NAME", default="tweet-collector-py")
 BQ_DATASET_NAME = os.getenv("BQ_DATASET_NAME", default=f"{APP_NAME}_{APP_ENV}") #> "impeachment_production"
 
+# TODO: CSVService
+
 def local_topics(csv_filepath=TOPICS_CSV_FILEPATH):
     """Returns a list of topic strings from the local topics CSV file"""
     topics_df = pandas.read_csv(csv_filepath)

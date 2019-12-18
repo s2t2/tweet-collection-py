@@ -27,6 +27,9 @@ def parse_admin_handles(csv_str=ADMIN_HANDLES):
         admin_handles = []
     return admin_handles
 
+class TopicResetEvent(Exception):
+    pass
+
 class TweetCollector(StreamListener):
 
     def __init__(self, bq_service=None, topics=None, dev_handle=TWITTER_HANDLE, admin_handles=None,
@@ -56,7 +59,11 @@ class TweetCollector(StreamListener):
             print("TRACKING TWITTER HANDLE", TWITTER_HANDLE)
             self.topics.append(TWITTER_HANDLE.strip()) # track the app's handle, so we can respond to mentions
 
-        print("(RE)SET TOPICS:", self.topics)
+        print("SET TOPICS:", self.topics)
+
+    def reset_topics(self):
+        self.set_topics()
+        raise TopicResetEvent("Let's trigger the listener to re-start in a kind of hacky way :-D")
 
     def on_status(self, status):
         """Param status (tweepy.models.Status)"""
@@ -82,12 +89,10 @@ class TweetCollector(StreamListener):
         if new_topic:
             print("NEW TOPIC REQUEST:", new_topic)
             if STORAGE_ENV == "remote":
-                errors = self.bq_service.append_topics([new_topic])
+                self.bq_service.append_topics([new_topic])
             else:
                 append_topics_to_csv([new_topic])
-                errors = []
-            self.set_topics() # after updating the respective datastore, refresh topics
-            return errors
+            self.reset_topics() # after updating the respective datastore, refresh topics
 
     @property
     def add_topic_command(self):
@@ -209,15 +214,16 @@ if __name__ == "__main__":
     stream = Stream(listener.auth, listener)
     print("STREAM", type(stream))
 
-    topics = listener.topics
-    #stream.filter(track=topics)
-    # handle ProtocolErrors...
     while True:
         try:
-            stream.filter(track=topics)
+            stream.filter(track=listener.topics)
         except ProtocolError:
             print("--------------------------------")
             print("RESTARTING AFTER PROTOCOL ERROR!")
+            continue
+        except TopicResetEvent as event:
+            print("--------------------------------")
+            print("RESTARTING AFTER TOPICS REFRESH!")
             continue
 
     # this never gets reached
