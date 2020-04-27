@@ -10,10 +10,8 @@ Provision and configure the Google Application Credentials Buildpack to generate
 
 ```sh
 heroku buildpacks:set heroku/python
-#heroku buildpacks:add https://github.com/elishaterada/heroku-google-application-credentials-buildpack
-# this isn't working at the moment, so instead:
-heroku buildpacks:add https://github.com/heavyperil/heroku-google-application-credentials-buildpack
-heroku config:set GOOGLE_CREDENTIALS="$(< credentials.json)" # references local creds
+heroku buildpacks:add https://github.com/s2t2/heroku-google-application-credentials-buildpack
+heroku config:set GOOGLE_CREDENTIALS="$(< path/to/local/credentials.json)" # references local creds
 heroku config:set GOOGLE_APPLICATION_CREDENTIALS="google-credentials.json"
 ```
 
